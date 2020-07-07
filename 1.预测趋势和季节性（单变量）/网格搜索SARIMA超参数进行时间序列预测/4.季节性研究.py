@@ -1,10 +1,4 @@
-"""
-一个简单的网格搜索框架
-网格搜索就是穷举法，对所有可能的参数组合都带入程序，进行尝试。
-模型参数对应：SARIMA(p,d,q)(P,D,Q)m，对于模型来说并不是所有输入参数都是有效的，
-如季节周期参数m不能为0，当m=0时，会导致SARIMAX函数报错
-这种报错是正常的，我们捕捉错误并记录下来即可 
-"""
+# grid search sarima hyperparameters for monthly mean temp dataset
 from math import sqrt
 from multiprocessing import cpu_count
 from joblib import Parallel
@@ -13,51 +7,51 @@ from warnings import catch_warnings
 from warnings import filterwarnings
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error
+from pandas import read_csv
 
-# 单步SARIMA预测函数
-# 对于模型来说并不是所有参数都是有效的，有的参数传入SARIMAX后，会报错，
-# 程序会捕捉这种错误并以None值来做标记，记录下来
+# one-step sarima forecast
 def sarima_forecast(history, config):
 	order, sorder, trend = config
-	# 定义模型
+	# define model
 	model = SARIMAX(history, order=order, seasonal_order=sorder, trend=trend, enforce_stationarity=False, enforce_invertibility=False)
-	# 训练模型
+	# fit model
 	model_fit = model.fit(disp=False)
-	# 用训练好的模型对历史数据进行预测
+	# make one step forecast
 	yhat = model_fit.predict(len(history), len(history))
 	return yhat[0]
 
-# 用标准差作为损失函数
+# root mean squared error or rmse
 def measure_rmse(actual, predicted):
 	return sqrt(mean_squared_error(actual, predicted))
 
-# 将数据按照给定的比例n_test，切分成训练集和测试集
+# split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
 
-# 时间序列单步预测主函数
+# walk-forward validation for univariate data
 def walk_forward_validation(data, n_test, cfg):
-    predictions = list()
-    # 切分数据
-    train, test = train_test_split(data, n_test)
-    # seed history with training dataset
-    history = [x for x in train]
-    history = train
-    # 队测试集数据进行单步预测
-    for i in range(len(test)):
-    	# 调用预测函数，根据观测值进行预测
-    	yhat = sarima_forecast(history, cfg)
-    	# 保存预测结果
-    	predictions.append(yhat)
-    	# 在历史数据中添加一个新观测值，进行下一次预测
-    	history.append(test[i])
-    # 用标准差评估预测损失
-    error = measure_rmse(test, predictions)
-    return error
+	predictions = list()
+	# split dataset
+	train, test = train_test_split(data, n_test)
+	# seed history with training dataset
+	history = [x for x in train]
+	# step over each time-step in the test set
+	for i in range(len(test)):
+		# fit model and make forecast for history
+		yhat = sarima_forecast(history, cfg)
+		# store forecast in list of predictions
+		predictions.append(yhat)
+		# add actual observation to history for the next loop
+		history.append(test[i])
+	# estimate prediction error
+	error = measure_rmse(test, predictions)
+	return error
 
-# 对模型参数进行评分，失败的结果返回None
+# score a model, return None on failure
 def score_model(data, n_test, cfg, debug=False):
 	result = None
+	# convert config to a key
+	key = str(cfg)
 	# show all warnings and fail on exception if debugging
 	if debug:
 		result = walk_forward_validation(data, n_test, cfg)
@@ -70,41 +64,40 @@ def score_model(data, n_test, cfg, debug=False):
 				result = walk_forward_validation(data, n_test, cfg)
 		except:
 			error = None
-	# 打印测试的模型参数和对应的准确率
+	# check for an interesting result
 	if result is not None:
-		print(' Model[%s] %.3f' % (str(cfg), result))
-	return (str(cfg), result)
+		print(' > Model[%s] %.3f' % (key, result))
+	return (key, result)
 
-# 开始网格搜索算法，parallel=False表示调用线程并发计算
+# grid search configs
 def grid_search(data, cfg_list, n_test, parallel=True):
 	scores = None
 	if parallel:
-		# 使用线程并发计算结果
+		# execute configs in parallel
 		executor = Parallel(n_jobs=cpu_count(), backend='multiprocessing')
 		tasks = (delayed(score_model)(data, n_test, cfg) for cfg in cfg_list)
 		scores = executor(tasks)
 	else:
 		scores = [score_model(data, n_test, cfg) for cfg in cfg_list]
-	# 把输出结果为None的模型参数删除
+	# remove empty results
 	scores = [r for r in scores if r[1] != None]
-	# 根据准确率进行排序
+	# sort configs by error, asc
 	scores.sort(key=lambda tup: tup[1])
 	return scores
 
-# 创建一个 SARIMA 参数配置列表,季节周期参数默认为0
+# create a set of sarima configs to try
 def sarima_configs(seasonal=[0]):
 	models = list()
-	# 定义各种参数的取值范围
+	# define config lists
 	p_params = [0, 1, 2]
 	d_params = [0, 1]
 	q_params = [0, 1, 2]
-	# n,c,t,ct,分别表示无趋势，常数，线性和具有线性趋势的常数
 	t_params = ['n','c','t','ct']
 	P_params = [0, 1, 2]
 	D_params = [0, 1]
 	Q_params = [0, 1, 2]
 	m_params = seasonal
-	# 穷举各种参数配置的组合，记录到列表中
+	# create config instances
 	for p in p_params:
 		for d in d_params:
 			for q in q_params:
@@ -118,16 +111,18 @@ def sarima_configs(seasonal=[0]):
 	return models
 
 if __name__ == '__main__':
-	# 测试数据集
-	data = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
-	print(data)
-	# 定义数据切分比例
-	n_test = 4
-	# 模型参数配置
-	cfg_list = sarima_configs()
-	# 开始网格搜索算法
+	# load dataset
+	series = read_csv('monthly-mean-temp.csv', header=0, index_col=0)
+	data = series.values
+	# trim dataset to 5 years
+	data = data[-(5*12):]
+	# data split
+	n_test = 12
+	# model configs
+	cfg_list = sarima_configs(seasonal=[0, 12])
+	# grid search
 	scores = grid_search(data, cfg_list, n_test, False)
 	print('done')
-	# 列出得分排名前三的配置
+	# list top 3 configs
 	for cfg, error in scores[:3]:
 		print(cfg, error)

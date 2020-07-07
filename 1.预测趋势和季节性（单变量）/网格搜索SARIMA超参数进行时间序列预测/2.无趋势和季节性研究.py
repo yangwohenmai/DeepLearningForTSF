@@ -3,7 +3,7 @@
 网格搜索就是穷举法，对所有可能的参数组合都带入程序，进行尝试。
 模型参数对应：SARIMA(p,d,q)(P,D,Q)m，对于模型来说并不是所有输入参数都是有效的，
 如季节周期参数m不能为0，当m=0时，会导致SARIMAX函数报错
-这种报错是正常的，我们捕捉错误并记录下来即可 
+这种报错是正常的，我们捕捉错误并记录下来即可
 """
 from math import sqrt
 from multiprocessing import cpu_count
@@ -13,6 +13,7 @@ from warnings import catch_warnings
 from warnings import filterwarnings
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error
+from pandas import read_csv
 
 # 单步SARIMA预测函数
 # 对于模型来说并不是所有参数都是有效的，有的参数传入SARIMAX后，会报错，
@@ -42,8 +43,7 @@ def walk_forward_validation(data, n_test, cfg):
     train, test = train_test_split(data, n_test)
     # seed history with training dataset
     history = [x for x in train]
-    history = train
-    # 队测试集数据进行单步预测
+    # 对测试集数据进行单步预测
     for i in range(len(test)):
     	# 调用预测函数，根据观测值进行预测
     	yhat = sarima_forecast(history, cfg)
@@ -68,7 +68,7 @@ def score_model(data, n_test, cfg, debug=False):
 			with catch_warnings():
 				filterwarnings("ignore")
 				result = walk_forward_validation(data, n_test, cfg)
-		except:
+		except Exception as e:
 			error = None
 	# 打印测试的模型参数和对应的准确率
 	if result is not None:
@@ -91,7 +91,7 @@ def grid_search(data, cfg_list, n_test, parallel=True):
 	scores.sort(key=lambda tup: tup[1])
 	return scores
 
-# 创建一个 SARIMA 参数配置列表,季节周期参数默认为0
+# 创建一个 SARIMA 参数配置列表
 def sarima_configs(seasonal=[0]):
 	models = list()
 	# 定义各种参数的取值范围
@@ -118,11 +118,12 @@ def sarima_configs(seasonal=[0]):
 	return models
 
 if __name__ == '__main__':
-	# 测试数据集
-	data = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
-	print(data)
-	# 定义数据切分比例
-	n_test = 4
+	# load dataset
+	series = read_csv('daily-total-female-births.csv', header=0, index_col=0)
+	data = series.values
+	print(data.shape)
+	# data split
+	n_test = 165
 	# 模型参数配置
 	cfg_list = sarima_configs()
 	# 开始网格搜索算法
