@@ -1,7 +1,7 @@
 # DeepLearning4TimeSeriesForecasting
 深度学习以进行时间序列预测
 ## 序言  
-**+ 7天迷你课**  
++ **7天迷你课**  
 ```
   3.用于时间序列预测的MLP  
   4.用于时间序列预测的CNN  
