@@ -6,6 +6,20 @@ from keras.layers import Dense
 X = array([[10, 20, 30], [20, 30, 40], [30, 40, 50], [40, 50, 60]])
 y = array([40, 50, 60, 70])
 # reshape from [samples, timesteps] into [samples, timesteps, features] 即 [4,3]=>[4,3,1]
+"""
+[[10 20 30]
+ [20 30 40]
+ [30 40 50]
+ [40 50 60]]
+变成
+[[[10]  [20]  [30]]
+
+ [[20]  [30]  [40]]
+
+ [[30]  [40]  [50]]
+
+ [[40]  [50]  [60]]]
+ """
 X = X.reshape((X.shape[0], X.shape[1], 1))
 # 定义网络
 model = Sequential()

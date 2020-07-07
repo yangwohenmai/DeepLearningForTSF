@@ -21,7 +21,7 @@ def sarima_forecast(history, config):
 	order, sorder, trend = config
 	# 定义模型
 	model = SARIMAX(history, order=order, seasonal_order=sorder, trend=trend, enforce_stationarity=False, enforce_invertibility=False)
-	# 训练模型
+	# 训练模型过程中会有很多调试信息，disp=0或disp=False表示关闭信息
 	model_fit = model.fit(disp=False)
 	# 用训练好的模型对历史数据进行预测
 	yhat = model_fit.predict(len(history), len(history))
