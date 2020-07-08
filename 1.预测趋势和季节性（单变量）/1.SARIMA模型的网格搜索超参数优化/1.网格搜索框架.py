@@ -15,16 +15,21 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error
 
 # 单步SARIMA预测函数
-# 对于模型来说并不是所有参数都是有效的，有的参数传入SARIMAX后，会报错，
-# 程序会捕捉这种错误并以None值来做标记，记录下来
+# 对于模型来说并不是程序提供的所有参数都是有效的，有的参数传入SARIMAX后，会报错，
+# 程序外层会catch这种错误并以None值来做标记，记录下来
 def sarima_forecast(history, config):
 	order, sorder, trend = config
 	# 定义模型
 	model = SARIMAX(history, order=order, seasonal_order=sorder, trend=trend, enforce_stationarity=False, enforce_invertibility=False)
 	# 训练模型过程中会有很多调试信息，disp=0或disp=False表示关闭信息
 	model_fit = model.fit(disp=False)
-	# 用训练好的模型对历史数据进行预测
-	yhat = model_fit.predict(len(history), len(history))
+	# 进行预测，有forecast(n)和predict(start,end)两种预测方法，foreast预测是对样本外的数据进行预测，predict可以对样本内和样本外的进行预测：
+	# forecast(n)对于输入的训练数据history，每次向后预测n个数值，不写n时默认预测一个值
+	# predict(start,end)表示预测从输入训练样本的第一个值开始计数，预测第start到第end个数据。输入5条训练数据，predict(8,9)表示预测第9~10条数据(样本外)，predict(3,6)表示预测第4~7条数据(样本内)
+	#yhat = model_fit.forecast()
+	#yhat = model_fit.predict(start=len(history),end=len(history))，start和end可以省略
+	yhat = model_fit.predict(len(history),len(history))
+	# 返回预测数组中的第一条数据
 	return yhat[0]
 
 # 用标准差作为损失函数

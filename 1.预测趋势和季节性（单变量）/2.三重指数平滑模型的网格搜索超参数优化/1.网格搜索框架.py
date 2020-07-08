@@ -1,9 +1,8 @@
 """
 一个简单的网格搜索框架
 网格搜索就是穷举法，对所有可能的参数组合都带入程序，进行尝试。
-模型参数对应：SARIMA(p,d,q)(P,D,Q)m，对于模型来说并不是所有输入参数都是有效的，
-如季节周期参数m不能为0，当m=0时，会导致SARIMAX函数报错
-这种报错是正常的，我们捕捉错误并记录下来即可 
+模型参数对应：ExponentialSmoothing(t,d,s,p,b,r)，对于模型来说，并不是程序给出的所有输入参数组合都是有效的，
+部分参数组合会报错，这种报错由catch捕捉，只记录下有效的参数即可
 """
 from math import sqrt
 from multiprocessing import cpu_count
@@ -15,7 +14,7 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from sklearn.metrics import mean_squared_error
 from numpy import array
 
-# 单步Holt Winter指数平滑预测模型
+# 单步三重指数平滑（Holt Winter）模型
 def exp_smoothing_forecast(history, config):
 	t,d,s,p,b,r = config
 	# 定义模型
@@ -55,7 +54,7 @@ def walk_forward_validation(data, n_test, cfg):
     error = measure_rmse(test, predictions)
     return error
 
-# 对模型参数进行评分，失败的结果返回None
+# 对模型参数进行评分，失败的被catch到，结果返回None
 def score_model(data, n_test, cfg, debug=False):
 	result = None
 	# show all warnings and fail on exception if debugging
