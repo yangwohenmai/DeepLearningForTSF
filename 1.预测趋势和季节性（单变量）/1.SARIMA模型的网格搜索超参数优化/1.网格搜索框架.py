@@ -20,6 +20,10 @@ from sklearn.metrics import mean_squared_error
 def sarima_forecast(history, config):
 	order, sorder, trend = config
 	# 定义模型
+    # order是普通参数，seasonal_order是季节参数，trend是趋势类型
+    # 该实现称为SARIMAX而不是SARIMA，因为方法名称的"X"表示该实现还支持外生变量。
+	# 外生变量是并行时间序列变量，不是直接通过AR，I或MA流程建模的，而是作为模型的加权输入提供的。
+	# 外生变量是可选的，可以通过"exog"参数指定，SARIMAX(data, exog=other_data,...)
 	model = SARIMAX(history, order=order, seasonal_order=sorder, trend=trend, enforce_stationarity=False, enforce_invertibility=False)
 	# 训练模型过程中会有很多调试信息，disp=0或disp=False表示关闭信息
 	model_fit = model.fit(disp=False)
@@ -69,8 +73,8 @@ def score_model(data, n_test, cfg, debug=False):
 	else:
 		# one failure during model validation suggests an unstable config
 		try:
-			# never show warnings when grid searching, too noisy
 			with catch_warnings():
+				# 忽略无关的报警信息
 				filterwarnings("ignore")
 				result = walk_forward_validation(data, n_test, cfg)
 		except:
