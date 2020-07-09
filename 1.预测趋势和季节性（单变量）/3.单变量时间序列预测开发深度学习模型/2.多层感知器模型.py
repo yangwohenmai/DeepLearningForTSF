@@ -11,11 +11,11 @@ from keras.models import Sequential
 from keras.layers import Dense
 from matplotlib import pyplot
 
-# split a univariate dataset into train/test sets
+# 把单列数据按给定数n_test，拆分成测试集和训练集
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
 
-# transform list into supervised learning format
+# 将list格式数据转换成监督学习数据
 def series_to_supervised(data, n_in=1, n_out=1):
 	df = DataFrame(data)
 	cols = list()
@@ -25,24 +25,24 @@ def series_to_supervised(data, n_in=1, n_out=1):
 	# forecast sequence (t, t+1, ... t+n)
 	for i in range(0, n_out):
 		cols.append(df.shift(-i))
-	# put it all together
+	# 、将位移过的各个列横向拼接到一起
 	agg = concat(cols, axis=1)
 	print(agg)
-	# drop rows with NaN values
+	# 删除有null数据的行
 	agg.dropna(inplace=True)
 	print(agg)
 	print(agg.values)
 	return agg.values
 
-# root mean squared error or rmse
+# 求预测值和真实值之间的均方差
 def measure_rmse(actual, predicted):
 	return sqrt(mean_squared_error(actual, predicted))
 
-# fit a model
+# 训练模型
 def model_fit(train, config):
-	# unpack config
+	# 拆分配置信息
 	n_input, n_nodes, n_epochs, n_batch = config
-	# prepare data
+	# 将list格式数据转换成监督学习数据
 	data = series_to_supervised(train, n_in=n_input)
 	train_x, train_y = data[:, :-1], data[:, -1]
 	# define model
@@ -54,28 +54,28 @@ def model_fit(train, config):
 	model.fit(train_x, train_y, epochs=n_epochs, batch_size=n_batch, verbose=0)
 	return model
 
-# forecast with a pre-fit model
+# 用训练好的模型model开始预测
 def model_predict(model, history, config):
-	# unpack config
+	# 拆分配置信息
 	n_input, _, _, _ = config
-	# prepare data
+	# 构造输入数据格式
 	x_input = array(history[-n_input:]).reshape(1, n_input)
-	# forecast
+	# 预测
 	yhat = model.predict(x_input, verbose=0)
 	return yhat[0]
 
 # walk-forward validation for univariate data
 def walk_forward_validation(data, n_test, cfg):
 	predictions = list()
-	# split dataset
-	train, test = train_test_split(data, n_test)
-	# fit model
+	# 将数据拆分成测试集和训练集
+	train, test = data[:-n_test], data[-n_test:]
+	# 训练模型
 	model = model_fit(train, cfg)
 	# seed history with training dataset
 	history = [x for x in train]
 	# step over each time-step in the test set
 	for i in range(len(test)):
-		# fit model and make forecast for history
+		# 用训练好的模型开始预测数据，每次传入
 		yhat = model_predict(model, history, cfg)
 		# store forecast in list of predictions
 		predictions.append(yhat)
@@ -83,6 +83,8 @@ def walk_forward_validation(data, n_test, cfg):
 		history.append(test[i])
 	# estimate prediction error
 	error = measure_rmse(test, predictions)
+	print(test)
+	print(predictions)
 	print(' > %.3f' % error)
 	return error
 
@@ -105,7 +107,7 @@ series = read_csv('monthly-car-sales.csv', header=0, index_col=0)
 data = series.values
 # data split
 n_test = 12
-# define config
+# 配置信息，[n_input, n_nodes, n_epochs, n_batch]
 config = [24, 500, 100, 100]
 # grid search
 scores = repeat_evaluate(data, config, n_test)
