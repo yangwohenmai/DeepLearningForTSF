@@ -15,14 +15,17 @@ from matplotlib import pyplot
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
 
-# 将list格式数据转换成监督学习数据
-def series_to_supervised(data, n_in, n_out=2):
+# 将单列list格式数据转换成（输入/输出）监督学习数据
+# data：单列数据
+# n_in：用于构造输入序列(t-n, ... t-1)，n_in表示每行监督学习数据的长度，如n_in=9，可构造8->1。n_in=0表示停用
+# n_out：用于构造输出序列(t, t+1, ... t+n)，n_out表示每行监督学习数据的长度，如n_in=9，可构造8->1。n_out=0表示停用
+def series_to_supervised(data, n_in, n_out=0):
 	df = DataFrame(data)
 	cols = list()
-	# 得到(t-n, ... t-1)：从n_int到0循环，步长为-1。每次将data向下移动i行，将移动过的数据添加到cols数组中
-	for i in range(n_in, 0, -1):
+	# 得到(t-n, ... t-1, t)：从n_in到-1循环，步长为-1。每次将data向下移动i行，将移动过的数据添加到cols数组中
+	for i in range(n_in, -1, -1):
 		cols.append(df.shift(i))
-	# 得到(t, t+1, ... t+n)：默认n_out=1，所以循环不做任何处理，数据保持原样
+	# 得到(t, t+1, ... t+n)：默认n_out=0，
 	for i in range(0, n_out):
 		cols.append(df.shift(-i))
 	# 将位移过的各个列，横向拼接到一起
@@ -102,7 +105,7 @@ data = series.values
 # data split
 n_test = 12
 # 配置信息，[输入长度n_input, 节点数n_nodes, 周期n_epochs, 批次n_batch]
-config = [24, 500, 100, 100]
+config = [5, 500, 100, 100]
 # grid search
 scores = repeat_evaluate(data, config, n_test)
 # 汇总模型均方差

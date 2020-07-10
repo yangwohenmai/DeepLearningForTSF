@@ -51,15 +51,16 @@ def model_fit(train, config):
 	train_x = train_x.reshape((train_x.shape[0], n_seq, n_steps, 1))
 	# define model
 	model = Sequential()
+	# 必须将相同的CNN模型应用于每个输入子序列。我们可以通过将整个CNN模型包装在TimeDistributed图层包装器中来实现。
 	model.add(TimeDistributed(Conv1D(filters=n_filters, kernel_size=n_kernel, activation='relu', input_shape=(None,n_steps,1))))
 	model.add(TimeDistributed(Conv1D(filters=n_filters, kernel_size=n_kernel, activation='relu')))
 	model.add(TimeDistributed(MaxPooling1D(pool_size=2)))
 	model.add(TimeDistributed(Flatten()))
+	# CNN的输出是一个向量，是一个可以由LSTM模型解释的时间序列。紧随其后的是一个完全连接层，用于解释LSTM的结果，最后是一个输出层，用于进行单步预测
 	model.add(LSTM(n_nodes, activation='relu'))
 	model.add(Dense(n_nodes, activation='relu'))
 	model.add(Dense(1))
 	model.compile(loss='mse', optimizer='adam')
-	# fit
 	model.fit(train_x, train_y, epochs=n_epochs, batch_size=n_batch, verbose=0)
 	return model
 
@@ -115,7 +116,13 @@ series = read_csv('monthly-car-sales.csv', header=0, index_col=0)
 data = series.values
 # data split
 n_test = 12
-# define config
+# n_seq：样本中的子序列数，即输入钟包含几个n_steps。
+# n_steps：每个子序列中的时间步长。
+# n_filters：并行过滤器数量(卷积核)。
+# n_kernel：在每次读取输入序列时考虑的时间步数。
+# n_nodes：在隐藏层中LSTM神经元数。
+# n_epochs：模型训练次数。
+# n_batch：一个时期内采样的数量，权重之后将被更新。
 config = [3, 12, 64, 3, 100, 200, 100]
 # grid search
 scores = repeat_evaluate(data, config, n_test)

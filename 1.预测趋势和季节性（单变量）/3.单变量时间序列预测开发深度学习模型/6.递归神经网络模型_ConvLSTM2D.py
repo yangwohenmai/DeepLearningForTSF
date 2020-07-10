@@ -1,4 +1,4 @@
-# evaluate lstm
+# evaluate convlstm
 from math import sqrt
 from numpy import array
 from numpy import mean
@@ -9,7 +9,8 @@ from pandas import read_csv
 from sklearn.metrics import mean_squared_error
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers import LSTM
+from keras.layers import Flatten
+from keras.layers import ConvLSTM2D
 from matplotlib import pyplot
 
 # split a univariate dataset into train/test sets
@@ -36,23 +37,23 @@ def series_to_supervised(data, n_in=1, n_out=1):
 def measure_rmse(actual, predicted):
 	return sqrt(mean_squared_error(actual, predicted))
 
-# 根据给定的周期interval，让数据做差来消除季节趋势
+# difference dataset
 def difference(data, interval):
 	return [data[i] - data[i - interval] for i in range(interval, len(data))]
 
 # fit a model
 def model_fit(train, config):
 	# unpack config
-	n_input, n_nodes, n_epochs, n_batch, n_diff = config
-	# 数据作差消除季节性
-	if n_diff > 0:
-		train = difference(train, n_diff)
+	n_seq, n_steps, n_filters, n_kernel, n_nodes, n_epochs, n_batch = config
+	n_input = n_seq * n_steps
+	# prepare data
 	data = series_to_supervised(train, n_in=n_input)
 	train_x, train_y = data[:, :-1], data[:, -1]
-	train_x = train_x.reshape((train_x.shape[0], train_x.shape[1], 1))
+	train_x = train_x.reshape((train_x.shape[0], n_seq, 1, n_steps, 1))
 	# define model
 	model = Sequential()
-	model.add(LSTM(n_nodes, activation='relu', input_shape=(n_input, 1)))
+	model.add(ConvLSTM2D(filters=n_filters, kernel_size=(1,n_kernel), activation='relu', input_shape=(n_seq, 1, n_steps, 1)))
+	model.add(Flatten())
 	model.add(Dense(n_nodes, activation='relu'))
 	model.add(Dense(1))
 	model.compile(loss='mse', optimizer='adam')
@@ -63,18 +64,13 @@ def model_fit(train, config):
 # forecast with a pre-fit model
 def model_predict(model, history, config):
 	# unpack config
-	n_input, _, _, _, n_diff = config
+	n_seq, n_steps, _, _, _, _, _ = config
+	n_input = n_seq * n_steps
 	# prepare data
-	correction = 0.0
-	# 从训练数据的倒数第12条开始，每次预测向后取值，最后将预测数据+取的值，即对数据进行逆差分，还原季节性
-	if n_diff > 0:
-		correction = history[-n_diff]
-		history = difference(history, n_diff)
-	x_input = array(history[-n_input:]).reshape((1, n_input, 1))
+	x_input = array(history[-n_input:]).reshape((1, n_seq, 1, n_steps, 1))
 	# forecast
 	yhat = model.predict(x_input, verbose=0)
-	# 预测数据+向前数第12个月的值，即对数据进行逆差分，还原季节性
-	return correction + yhat[0]
+	return yhat[0]
 
 # walk-forward validation for univariate data
 def walk_forward_validation(data, n_test, cfg):
@@ -117,13 +113,9 @@ series = read_csv('monthly-car-sales.csv', header=0, index_col=0)
 data = series.values
 # data split
 n_test = 12
-# n_input：滞后观测值的数量，用作模型的输入长度。36（即3年或3 * 12）
-# n_nodes：在隐藏层中的LSTM节点数。
-# n_epochs：训练次数。
-# n_batch：一个时期内采样的数量，权重之后将被更新。
-# n_diff：差序；如果未使用，则为0。12（即季节周期12个月）
-config = [36, 50, 100, 100, 12]
+# define config
+config = [3, 12, 256, 3, 200, 200, 100]
 # grid search
 scores = repeat_evaluate(data, config, n_test)
 # summarize scores
-summarize_scores('lstm', scores)
+summarize_scores('convlstm', scores)
