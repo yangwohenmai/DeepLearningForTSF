@@ -25,7 +25,7 @@ def series_to_supervised(data, n_in, n_out=0):
 	# 得到(t-n, ... t-1, t)：从n_in到-1循环，步长为-1。每次将data向下移动i行，将移动过的数据添加到cols数组中
 	for i in range(n_in, -1, -1):
 		cols.append(df.shift(i))
-	# 得到(t, t+1, ... t+n)：默认n_out=0，
+	# 得到(t, t+1, ... t+n)：默认n_out=0，不执行该循环
 	for i in range(0, n_out):
 		cols.append(df.shift(-i))
 	# 将位移过的各个列，横向拼接到一起

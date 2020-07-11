@@ -12,7 +12,9 @@ from keras.layers import Dense
 from keras.layers import Flatten
 from keras.layers import ConvLSTM2D
 from matplotlib import pyplot
-
+"""
+ConvLSTM2D不会一次使用一个步骤读取一个序列，而是会使用卷积过程（例如CNN）一次读取一个观测值的块或子序列
+"""
 # split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
@@ -113,7 +115,13 @@ series = read_csv('monthly-car-sales.csv', header=0, index_col=0)
 data = series.values
 # data split
 n_test = 12
-# define config
+# n_seq：样本中的子序列数。
+# n_steps：每个子序列中的时间步数。
+# n_filters：并行过滤器的数量。
+# n_kernel：在每次读取输入序列时考虑的时间步数。
+# n_nodes：在隐藏层中使用的LSTM单位数。
+# n_epochs：将模型暴露给整个训练数据集的次数。
+# n_batch：一个时期内采样的数量，权重之后将被更新。
 config = [3, 12, 256, 3, 200, 200, 100]
 # grid search
 scores = repeat_evaluate(data, config, n_test)

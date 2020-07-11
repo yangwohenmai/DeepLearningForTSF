@@ -15,7 +15,10 @@ from keras.layers import Flatten
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 from matplotlib import pyplot
-
+"""
+由于CNN有提取数据特征的功能，所以认为CNN可以提取季节性这个特征
+所以CNN+LSTM模型中不再对数据进行差分运算
+"""
 # split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
