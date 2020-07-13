@@ -11,7 +11,11 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from matplotlib import pyplot
-
+"""
+基本步骤和多层感知器模型一样，程序说明参考感知器即可，仅修改模型部分
+由于LSTM模型无法像SARIMA一样识别季节性，所以要手动消除季节性
+消除季节性用difference()函数，月份的季节周期为12，用当前值减去向前数第12位的值即可
+"""
 # split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]

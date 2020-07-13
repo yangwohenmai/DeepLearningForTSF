@@ -13,7 +13,11 @@ from keras.layers import Flatten
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 from matplotlib import pyplot
-
+"""
+基本步骤和多层感知器模型一样，程序说明参考感知器即可，仅修改模型部分
+当处理一维数据时，CNN会读取观测值，并学习提取与进行预测相关的特征
+定义具有两个一维卷积层的CNN模型，用于从输入序列中提取特征
+"""
 # split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
 	return data[:-n_test], data[-n_test:]
@@ -48,6 +52,7 @@ def model_fit(train, config):
 	train_x = train_x.reshape((train_x.shape[0], train_x.shape[1], 1))
 	# define model
 	model = Sequential()
+    # 定义具有两个一维卷积层的CNN模型，用于从输入序列中提取特征
 	model.add(Conv1D(filters=n_filters, kernel_size=n_kernel, activation='relu', input_shape=(n_input, 1)))
 	model.add(Conv1D(filters=n_filters, kernel_size=n_kernel, activation='relu'))
 	# 在卷积层之后使用最大池化层，将加权的输入提取特征，从而将输入大小减小1/4
@@ -64,7 +69,7 @@ def model_fit(train, config):
 def model_predict(model, history, config):
 	# unpack config
 	n_input, _, _, _, _ = config
-	# CNN在每个时间步上支持多个特征，这些特征被解释为图像的通道。我们每个时间步上只有一个特征，因此输入数据三维形状为[ n_samples，n_input，1 ]
+	# CNN在每个时间步上支持多个特征。我们每个时间步上只有一个特征，因此输入数据三维形状为[ n_samples，n_input，1 ]
 	x_input = array(history[-n_input:]).reshape((1, n_input, 1))
 	# forecast
 	yhat = model.predict(x_input, verbose=0)

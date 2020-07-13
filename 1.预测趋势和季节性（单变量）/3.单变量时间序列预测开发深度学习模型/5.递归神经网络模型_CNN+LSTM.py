@@ -16,8 +16,12 @@ from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 from matplotlib import pyplot
 """
-由于CNN有提取数据特征的功能，所以认为CNN可以提取季节性这个特征
-所以CNN+LSTM模型中不再对数据进行差分运算
+基本步骤和多层感知器模型一样，程序说明参考感知器即可，仅修改模型部分
+由于CNN有提取数据特征的功能，所以认为CNN可以提取季节性这个特征，
+所以CNN+LSTM模型中不再对数据进行差分或者缩放运算，直接对数据进行预测。
+该模型要求将每个输入序列（例如36个月）划分为多个子序列，每个子序列都由CNN模型读取，
+例如12个时间步长的3个子序列。将子序列按年划分可能是有意义的，但这只是一个假设，可使用其他比例划分，如六个子步长六个时间步长。
+使用n_seq和n_steps参数化此划分，以获取子序列数和每个子序列参数的步数
 """
 # split a univariate dataset into train/test sets
 def train_test_split(data, n_test):
@@ -59,7 +63,8 @@ def model_fit(train, config):
 	model.add(TimeDistributed(Conv1D(filters=n_filters, kernel_size=n_kernel, activation='relu')))
 	model.add(TimeDistributed(MaxPooling1D(pool_size=2)))
 	model.add(TimeDistributed(Flatten()))
-	# CNN的输出是一个向量，是一个可以由LSTM模型解释的时间序列。紧随其后的是一个完全连接层，用于解释LSTM的结果，最后是一个输出层，用于进行单步预测
+	# CNN的输出是一个向量，是一个可以由LSTM模型解释的时间序列。紧随其后的是一个完全连接层，用于解释LSTM的结果，
+    # 最后是一个输出层，用于进行单步预测
 	model.add(LSTM(n_nodes, activation='relu'))
 	model.add(Dense(n_nodes, activation='relu'))
 	model.add(Dense(1))
@@ -71,6 +76,7 @@ def model_fit(train, config):
 def model_predict(model, history, config):
 	# unpack config
 	n_seq, n_steps, _, _, _, _, _ = config
+    # 每个样本的滞后观察次数（n_seq * n_steps）
 	n_input = n_seq * n_steps
 	# prepare data
 	x_input = array(history[-n_input:]).reshape((1, n_seq, n_steps, 1))

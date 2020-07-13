@@ -13,6 +13,8 @@ from keras.layers import Flatten
 from keras.layers import ConvLSTM2D
 from matplotlib import pyplot
 """
+基本步骤和多层感知器模型一样，程序说明参考感知器即可，仅修改模型部分
+其中LSTM单元使用CNN的卷积过程提取特征后的输入数据
 ConvLSTM2D不会一次使用一个步骤读取一个序列，而是会使用卷积过程（例如CNN）一次读取一个观测值的块或子序列
 """
 # split a univariate dataset into train/test sets
