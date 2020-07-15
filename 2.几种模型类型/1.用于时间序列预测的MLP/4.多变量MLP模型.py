@@ -29,9 +29,9 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # 将3列数据垂直拼接在一起，数据长度要保持一致
 dataset = hstack((in_seq1, in_seq2, out_seq))
-# choose a number of time steps
+# 设置时间步长度
 n_steps = 3
-# convert into input/output
+# 构造多元监督学习型数据
 X, y = split_sequences(dataset, n_steps)
 # flatten input
 n_input = X.shape[1] * X.shape[2]

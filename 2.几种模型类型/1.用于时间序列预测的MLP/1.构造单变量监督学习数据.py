@@ -1,7 +1,7 @@
 # univariate data preparation
 from numpy import array
 
-# 构造监督学习型数据
+# 构造一元监督学习型数据
 def split_sequence(sequence, n_steps):
 	X, y = list(), list()
 	for i in range(len(sequence)):
