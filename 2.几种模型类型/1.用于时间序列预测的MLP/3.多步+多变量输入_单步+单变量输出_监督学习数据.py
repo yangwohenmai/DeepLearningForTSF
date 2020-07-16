@@ -33,7 +33,6 @@ n_steps = 3
 # 构造多元监督学习型数据
 X, y = split_sequences(dataset, n_steps)
 print(X.shape, y.shape)
-# summarize the data
-for i in range(len(X)):
-	print(X[i], y[i])
-print(X, y)
+
+print(X)
+print(y)

@@ -4,7 +4,10 @@ from numpy import hstack
 from keras.models import Sequential
 from keras.layers import Dense
 """
-本程序构造了一种[ 25  45  65  85 105 125 145 165 185]->[]
+本程序构造了一种[10 15 20 25 30 35]->[65]的结构
+即：用三组数据的输入来预测一个输出，这种数据本质上具有干扰性，前两组数据的输入和第三组数据的输出无关
+但网络仍然能从中学习到正确的计算规则
+本文宗旨在于展示如何
 """
 # 构造多元监督学习型数据
 def split_sequences(sequences, n_steps):

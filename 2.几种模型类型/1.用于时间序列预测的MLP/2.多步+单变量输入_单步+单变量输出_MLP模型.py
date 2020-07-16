@@ -24,6 +24,8 @@ raw_seq = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 n_steps = 3
 # 构造监督学习型数据
 X, y = split_sequence(raw_seq, n_steps)
+print(X)
+print(y)
 # 定义一个简单的MLP模型
 model = Sequential()
 model.add(Dense(100, activation='relu', input_dim=n_steps))

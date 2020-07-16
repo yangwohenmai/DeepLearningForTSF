@@ -1,10 +1,8 @@
-# multivariate mlp example
+# multivariate output mlp example
 from numpy import array
 from numpy import hstack
-from keras.models import Model
-from keras.layers import Input
+from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers.merge import concatenate
 
 # split a multivariate sequence into samples
 def split_sequences(sequences, n_steps):
@@ -13,10 +11,10 @@ def split_sequences(sequences, n_steps):
 		# find the end of this pattern
 		end_ix = i + n_steps
 		# check if we are beyond the dataset
-		if end_ix > len(sequences):
+		if end_ix > len(sequences)-1:
 			break
 		# gather input and output parts of the pattern
-		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
+		seq_x, seq_y = sequences[i:end_ix, :], sequences[end_ix, :]
 		X.append(seq_x)
 		y.append(seq_y)
 	return array(X), array(y)
@@ -31,29 +29,28 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # horizontally stack columns
 dataset = hstack((in_seq1, in_seq2, out_seq))
+print(dataset)
 # choose a number of time steps
 n_steps = 3
 # convert into input/output
 X, y = split_sequences(dataset, n_steps)
-# separate input data
-X1 = X[:, :, 0]
-X2 = X[:, :, 1]
-# first input model
-visible1 = Input(shape=(n_steps,))
-dense1 = Dense(100, activation='relu')(visible1)
-# second input model
-visible2 = Input(shape=(n_steps,))
-dense2 = Dense(100, activation='relu')(visible2)
-# merge input models
-merge = concatenate([dense1, dense2])
-output = Dense(1)(merge)
-model = Model(inputs=[visible1, visible2], outputs=output)
+print(X)
+print(y)
+# flatten input
+n_input = X.shape[1] * X.shape[2]
+X = X.reshape((X.shape[0], n_input))
+print(X)
+print(y)
+n_output = y.shape[1]
+# define model
+model = Sequential()
+model.add(Dense(100, activation='relu', input_dim=n_input))
+model.add(Dense(n_output))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit([X1, X2], y, epochs=2000, verbose=0)
+model.fit(X, y, epochs=2000, verbose=0)
 # demonstrate prediction
-x_input = array([[80, 85], [90, 95], [100, 105]])
-x1 = x_input[:, 0].reshape((1, n_steps))
-x2 = x_input[:, 1].reshape((1, n_steps))
-yhat = model.predict([x1, x2], verbose=0)
+x_input = array([[70,75,145], [80,85,165], [90,95,185]])
+x_input = x_input.reshape((1, n_input))
+yhat = model.predict(x_input, verbose=0)
 print(yhat)
