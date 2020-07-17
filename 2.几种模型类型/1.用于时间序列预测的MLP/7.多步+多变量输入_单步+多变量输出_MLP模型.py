@@ -37,6 +37,14 @@ X, y = split_sequences(dataset, n_steps)
 print(X)
 print(y)
 # flatten input
+"""
+将输入X中的每组数据
+[[ 10  15  25]
+ [ 20  25  45]
+ [ 30  35  65]]
+数据展平成
+[ 10  15  25  20  25  45  30  35  65]
+"""
 n_input = X.shape[1] * X.shape[2]
 X = X.reshape((X.shape[0], n_input))
 print(X)

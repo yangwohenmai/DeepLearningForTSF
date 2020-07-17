@@ -45,9 +45,8 @@ out_seq = array([in_seq1[i]+in_seq2[i] for i in range(len(in_seq1))])
 """
 in_seq1 = in_seq1.reshape((len(in_seq1), 1))
 in_seq2 = in_seq2.reshape((len(in_seq2), 1))
-print(out_seq)
 out_seq = out_seq.reshape((len(out_seq), 1))
-print(out_seq)
+
 # 将3列数据垂直拼接在一起，数据长度要保持一致
 dataset = hstack((in_seq1, in_seq2, out_seq))
 # 设置时间步长度
