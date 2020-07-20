@@ -1,7 +1,8 @@
 # multivariate output mlp example
 from numpy import array
 from numpy import hstack
-from keras.models import Sequential
+from keras.models import Model
+from keras.layers import Input
 from keras.layers import Dense
 
 # split a multivariate sequence into samples
@@ -34,31 +35,30 @@ print(dataset)
 n_steps = 3
 # convert into input/output
 X, y = split_sequences(dataset, n_steps)
-# 输入数据形状(6,3,3),6组输入数据，每组3个时间步，每个时间步3个特征：
-print(X)
-print(y)
 # flatten input
-"""
-将输入X中的每组数据
-[[ 10  15  25]
- [ 20  25  45]
- [ 30  35  65]]
-数据展平成
-[ 10  15  25  20  25  45  30  35  65]
-"""
-# 将(6,3,3)的数据展平成(6,9)的新X作为输入，用(时间步数 * 特征数)来重新调整输入X的形状
 n_input = X.shape[1] * X.shape[2]
 X = X.reshape((X.shape[0], n_input))
 print(X)
 print(y)
-n_output = y.shape[1]
+# separate output
+y1 = y[:, 0].reshape((y.shape[0], 1))
+print(y1)
+y2 = y[:, 1].reshape((y.shape[0], 1))
+y3 = y[:, 2].reshape((y.shape[0], 1))
 # define model
-model = Sequential()
-model.add(Dense(100, activation='relu', input_dim=n_input))
-model.add(Dense(n_output))
+visible = Input(shape=(n_input,))
+dense = Dense(100, activation='relu')(visible)
+# define output 1
+output1 = Dense(1)(dense)
+# define output 2
+output2 = Dense(1)(dense)
+# define output 2
+output3 = Dense(1)(dense)
+# tie together
+model = Model(inputs=visible, outputs=[output1, output2, output3])
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, y, epochs=2000, verbose=0)
+model.fit(X, [y1,y2,y3], epochs=2000, verbose=0)
 # demonstrate prediction
 x_input = array([[70,75,145], [80,85,165], [90,95,185]])
 x_input = x_input.reshape((1, n_input))

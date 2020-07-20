@@ -45,6 +45,6 @@ n_steps = 3
 # 构造多元监督学习型数据
 X, y = split_sequences(dataset, n_steps)
 print(X.shape, y.shape)
-
+# 输入数据形状(6,3,2),6组输入数据，每组3个时间步，每个时间步2个特征：
 print(X)
 print(y)
