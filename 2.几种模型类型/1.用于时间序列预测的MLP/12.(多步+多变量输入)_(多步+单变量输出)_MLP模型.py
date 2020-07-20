@@ -1,21 +1,21 @@
-# multivariate output mlp example
+# multivariate multi-step mlp example
 from numpy import array
 from numpy import hstack
-from keras.models import Model
-from keras.layers import Input
+from keras.models import Sequential
 from keras.layers import Dense
 
 # split a multivariate sequence into samples
-def split_sequences(sequences, n_steps):
+def split_sequences(sequences, n_steps_in, n_steps_out):
 	X, y = list(), list()
 	for i in range(len(sequences)):
 		# find the end of this pattern
-		end_ix = i + n_steps
+		end_ix = i + n_steps_in
+		out_end_ix = end_ix + n_steps_out-1
 		# check if we are beyond the dataset
-		if end_ix > len(sequences)-1:
+		if out_end_ix > len(sequences):
 			break
 		# gather input and output parts of the pattern
-		seq_x, seq_y = sequences[i:end_ix, :], sequences[end_ix, :]
+		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1:out_end_ix, -1]
 		X.append(seq_x)
 		y.append(seq_y)
 	return array(X), array(y)
@@ -30,37 +30,24 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # horizontally stack columns
 dataset = hstack((in_seq1, in_seq2, out_seq))
-print(dataset)
 # choose a number of time steps
-n_steps = 3
+n_steps_in, n_steps_out = 3, 2
 # convert into input/output
-X, y = split_sequences(dataset, n_steps)
+X, y = split_sequences(dataset, n_steps_in, n_steps_out)
+print(X)
+print(y)
 # flatten input
 n_input = X.shape[1] * X.shape[2]
 X = X.reshape((X.shape[0], n_input))
-print(X)
-print(y)
-# separate output
-y1 = y[:, 0].reshape((y.shape[0], 1))
-print(y1)
-y2 = y[:, 1].reshape((y.shape[0], 1))
-y3 = y[:, 2].reshape((y.shape[0], 1))
 # define model
-visible = Input(shape=(n_input,))
-dense = Dense(100, activation='relu')(visible)
-# define output 1
-output1 = Dense(1)(dense)
-# define output 2
-output2 = Dense(1)(dense)
-# define output 2
-output3 = Dense(1)(dense)
-# tie together
-model = Model(inputs=visible, outputs=[output1, output2, output3])
+model = Sequential()
+model.add(Dense(100, activation='relu', input_dim=n_input))
+model.add(Dense(n_steps_out))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, [y1,y2,y3], epochs=2000, verbose=0)
+model.fit(X, y, epochs=2000, verbose=0)
 # demonstrate prediction
-x_input = array([[70,75,145], [80,85,165], [90,95,185]])
+x_input = array([[70, 75], [80, 85], [90, 95]])
 x_input = x_input.reshape((1, n_input))
 yhat = model.predict(x_input, verbose=0)
 print(yhat)
