@@ -85,6 +85,7 @@ X, y = split_sequences(dataset, n_steps)
  [50 55 60 65 70 75]
  [60 65 70 75 80 85]]
  """
+# 用(时间步数 * 特征数)来重新调整输入X的形状
 n_input = X.shape[1] * X.shape[2]
 X = X.reshape((X.shape[0], n_input))
 # define model

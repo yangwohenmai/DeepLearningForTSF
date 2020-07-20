@@ -23,4 +23,5 @@ n_steps = 3
 # split into samples
 X, y = split_sequence(raw_seq, n_steps)
 
-print(X, y)
+print(X)
+print(y)

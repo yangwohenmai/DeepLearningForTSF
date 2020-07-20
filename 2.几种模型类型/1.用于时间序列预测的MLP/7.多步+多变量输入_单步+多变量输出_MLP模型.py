@@ -45,6 +45,7 @@ print(y)
 数据展平成
 [ 10  15  25  20  25  45  30  35  65]
 """
+# 用(时间步数 * 特征数)来重新调整输入X的形状
 n_input = X.shape[1] * X.shape[2]
 X = X.reshape((X.shape[0], n_input))
 print(X)
