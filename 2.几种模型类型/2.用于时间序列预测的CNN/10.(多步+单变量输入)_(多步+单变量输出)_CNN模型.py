@@ -46,3 +46,4 @@ x_input = array([70, 80, 90])
 x_input = x_input.reshape((1, n_steps_in, n_features))
 yhat = model.predict(x_input, verbose=0)
 print(yhat)
+
