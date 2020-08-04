@@ -16,7 +16,7 @@ def split_sequences(sequences, n_steps):
 		# 获取待预测数据的位置
 		end_ix = i + n_steps
 		# 如果待预测数据超过序列长度，构造完成
-		if end_ix > len(sequences)-1:
+		if end_ix > len(sequences):
 			break
 		# 取前三行数据的前两列作为输入X，第三行数据的最后一列作为输出y
 		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
@@ -76,14 +76,19 @@ X, y = split_sequences(dataset, n_steps)
 
  [[60 65]
   [70 75]
-  [80 85]]]
+  [80 85]]
+
+ [[70 75]
+  [80 85]
+  [90 95]]]
 转变成
 [[10 15 20 25 30 35]
  [20 25 30 35 40 45]
  [30 35 40 45 50 55]
  [40 45 50 55 60 65]
  [50 55 60 65 70 75]
- [60 65 70 75 80 85]]
+ [60 65 70 75 80 85]
+ [65 70 75 80 85 90]]
  """
 # 用(时间步数 * 特征数)来重新调整输入X的形状
 n_input = X.shape[1] * X.shape[2]
