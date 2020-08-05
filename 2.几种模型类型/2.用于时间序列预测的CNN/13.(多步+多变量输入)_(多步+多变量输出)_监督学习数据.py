@@ -1,22 +1,24 @@
 # multivariate multi-step data preparation
 from numpy import array
 from numpy import hstack
+from keras.models import Sequential
+from keras.layers import LSTM
+from keras.layers import Dense
+from keras.layers import RepeatVector
+from keras.layers import TimeDistributed
 
-# 构造(多步+多变量输入)_(多步+单变量输出)
-def split_sequences(sequences, n_steps_in, n_steps_out, shift=0):
+# split a multivariate sequence into samples
+def split_sequences(sequences, n_steps_in, n_steps_out):
 	X, y = list(), list()
 	for i in range(len(sequences)):
-		# 计算输入序列的结尾位置
+		# find the end of this pattern
 		end_ix = i + n_steps_in
-		# 计算输出序列的起始位置
-		out_start_ix = end_ix + shift
-		# 计算输出序列的结尾位置
-		out_end_ix = end_ix + n_steps_out + shift
-		# 判断序列是否结束
+		out_end_ix = end_ix + n_steps_out
+		# check if we are beyond the dataset
 		if out_end_ix > len(sequences):
 			break
-		# 根据算好的位置，取输入输出值
-		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[out_start_ix:out_end_ix, -1]
+		# gather input and output parts of the pattern
+		seq_x, seq_y = sequences[i:end_ix, :], sequences[end_ix:out_end_ix, :]
 		X.append(seq_x)
 		y.append(seq_y)
 	return array(X), array(y)
@@ -31,12 +33,10 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # horizontally stack columns
 dataset = hstack((in_seq1, in_seq2, out_seq))
-# n_steps_in:输入数据长度
-# n_steps_out:输出数据长度
-# shift:从距离输入序列结尾位置，上下偏移多少位开始取值
-n_steps_in, n_steps_out, shift = 3, 2, 0
-# 构造(多步+多变量输入)_(多步+单变量输出)
-X, y = split_sequences(dataset, n_steps_in, n_steps_out, shift)
+# choose a number of time steps
+n_steps_in, n_steps_out = 3, 2
+# convert into input/output
+X, y = split_sequences(dataset, n_steps_in, n_steps_out)
 print(X.shape, y.shape)
 # summarize the data
 for i in range(len(X)):
