@@ -1,16 +1,16 @@
 # univariate data preparation
 from numpy import array
 
-# split a univariate sequence into samples
+# 构造一元监督学习型数据
 def split_sequence(sequence, n_steps):
 	X, y = list(), list()
 	for i in range(len(sequence)):
-		# find the end of this pattern
+		# 获取待预测数据的位置
 		end_ix = i + n_steps
-		# check if we are beyond the sequence
-		if end_ix > len(sequence)-1:
+		# 如果待预测数据超过序列长度，构造完成
+		if end_ix >= len(sequence):
 			break
-		# gather input and output parts of the pattern
+		# 分别汇总 输入 和 输出 数据集
 		seq_x, seq_y = sequence[i:end_ix], sequence[end_ix]
 		X.append(seq_x)
 		y.append(seq_y)

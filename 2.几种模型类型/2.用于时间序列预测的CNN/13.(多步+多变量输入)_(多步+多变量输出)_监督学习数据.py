@@ -38,6 +38,5 @@ n_steps_in, n_steps_out = 3, 2
 # convert into input/output
 X, y = split_sequences(dataset, n_steps_in, n_steps_out)
 print(X.shape, y.shape)
-# summarize the data
-for i in range(len(X)):
-	print(X[i], y[i])
+print(X)
+print(y)
