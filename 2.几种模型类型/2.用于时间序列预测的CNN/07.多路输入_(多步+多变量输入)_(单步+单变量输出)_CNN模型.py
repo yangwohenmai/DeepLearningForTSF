@@ -41,24 +41,99 @@ X, y = split_sequences(dataset, n_steps)
 print(X)
 # one time series per head
 n_features = 1
-# separate input data
+"""
+将以下数据（7,3,2）：
+[[[10 15]
+  [20 25]
+  [30 35]]
+ [[20 25]
+  [30 35]
+  [40 45]]
+ [[30 35]
+  [40 45]
+  [50 55]]
+ [[40 45]
+  [50 55]
+  [60 65]]
+ [[50 55]
+  [60 65]
+  [70 75]]
+ [[60 65]
+  [70 75]
+  [80 85]]
+ [[70 75]
+  [80 85]
+  [90 95]]]
+
+拆分成两段输入数据(7,3,1)：
+[[[10]
+  [20]
+  [30]]
+ [[20]
+  [30]
+  [40]]
+ [[30]
+  [40]
+  [50]]
+ [[40]
+  [50]
+  [60]]
+ [[50]
+  [60]
+  [70]]
+ [[60]
+  [70]
+  [80]]
+ [[70]
+  [80]
+  [90]]]
+  和
+[[[15]
+  [25]
+  [35]]
+ [[25]
+  [35]
+  [45]]
+ [[35]
+  [45]
+  [55]]
+ [[45]
+  [55]
+  [65]]
+ [[55]
+  [65]
+  [75]]
+ [[65]
+  [75]
+  [85]]
+ [[75]
+  [85]
+  [95]]]
+
+"""
 X1 = X[:, :, 0].reshape(X.shape[0], X.shape[1], n_features)
-print(X1)
 X2 = X[:, :, 1].reshape(X.shape[0], X.shape[1], n_features)
-print(X2)
-# first input model
+# 分别定义两路输入的输入数据形状，（3,1），共7组数据
 visible1 = Input(shape=(n_steps, n_features))
+# 卷积层(,3,1)->(,2,64)
 cnn1 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible1)
+# 池化层(,2,64)->(,1,64)
 cnn1 = MaxPooling1D(pool_size=2)(cnn1)
+# 平滑层(,1,64)->(,64)
 cnn1 = Flatten()(cnn1)
-# second input model
+# 分别定义两路输入的输入数据形状，（3,1），共7组数据
 visible2 = Input(shape=(n_steps, n_features))
+# 卷积层(,3,1)->(,2,64)
 cnn2 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible2)
+# 池化层(,2,64)->(,1,64)
 cnn2 = MaxPooling1D(pool_size=2)(cnn2)
+# 平滑层(,1,64)->(,64)
 cnn2 = Flatten()(cnn2)
-# merge input models
+# 两路数据通过卷积层，池化层，平滑层后，合并起来，与全连接层相连[(,64),(,64)]->(,128)
 merge = concatenate([cnn1, cnn2])
+# 全连接层(,128)->(,50)
 dense = Dense(50, activation='relu')(merge)
+# 全连接层(,50)->(,1)
 output = Dense(1)(dense)
 model = Model(inputs=[visible1, visible2], outputs=output)
 model.compile(optimizer='adam', loss='mse')
