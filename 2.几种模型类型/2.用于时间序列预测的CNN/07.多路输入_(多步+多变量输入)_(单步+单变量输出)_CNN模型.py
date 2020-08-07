@@ -38,11 +38,14 @@ dataset = hstack((in_seq1, in_seq2, out_seq))
 n_steps = 3
 # convert into input/output
 X, y = split_sequences(dataset, n_steps)
+print(X)
 # one time series per head
 n_features = 1
 # separate input data
 X1 = X[:, :, 0].reshape(X.shape[0], X.shape[1], n_features)
+print(X1)
 X2 = X[:, :, 1].reshape(X.shape[0], X.shape[1], n_features)
+print(X2)
 # first input model
 visible1 = Input(shape=(n_steps, n_features))
 cnn1 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible1)
