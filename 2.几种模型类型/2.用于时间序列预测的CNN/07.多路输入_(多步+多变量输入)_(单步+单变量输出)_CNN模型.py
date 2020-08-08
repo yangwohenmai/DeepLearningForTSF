@@ -38,7 +38,6 @@ dataset = hstack((in_seq1, in_seq2, out_seq))
 n_steps = 3
 # convert into input/output
 X, y = split_sequences(dataset, n_steps)
-print(X)
 # one time series per head
 n_features = 1
 """
@@ -137,8 +136,9 @@ dense = Dense(50, activation='relu')(merge)
 output = Dense(1)(dense)
 model = Model(inputs=[visible1, visible2], outputs=output)
 model.compile(optimizer='adam', loss='mse')
-# fit model
+# 训练网络时，输入数据拼接成[X1, X2]即[(7,3,1),(7,3,1)]
 model.fit([X1, X2], y, epochs=1000, verbose=0)
+
 # demonstrate prediction
 x_input = array([[80, 85], [90, 95], [100, 105]])
 x1 = x_input[:, 0].reshape((1, n_steps, n_features))
