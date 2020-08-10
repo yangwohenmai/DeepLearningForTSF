@@ -37,13 +37,46 @@ dataset = hstack((in_seq1, in_seq2, out_seq))
 n_steps = 3
 # convert into input/output
 X, y = split_sequences(dataset, n_steps)
+print(X)
+print(y)
 # the dataset knows the number of features, e.g. 2
 n_features = X.shape[2]
-# separate output
+"""
+将输出y
+[[ 40  45  85]
+ [ 50  55 105]
+ [ 60  65 125]
+ [ 70  75 145]
+ [ 80  85 165]
+ [ 90  95 185]]
+ 转换成三路输出
+ [[40]
+  [50]
+  [60]
+  [70]
+  [80]
+  [90]]
+ 和
+ [[45]
+  [55]
+  [65]
+  [75]
+  [85]
+  [95]]
+ 和
+ [[ 85]
+  [105]
+  [125]
+  [145]
+  [165]
+  [185]]
+"""
+# 将(6,3)转换成3个(6,1)
 y1 = y[:, 0].reshape((y.shape[0], 1))
 y2 = y[:, 1].reshape((y.shape[0], 1))
 y3 = y[:, 2].reshape((y.shape[0], 1))
-# 定义输入的数据形状，(None,3,3)，第一个None元素代表有N组数据
+
+# 定义网络输入和隐藏层的形状，(None,3,3)，第一个None元素代表有N组数据
 visible = Input(shape=(n_steps, n_features))
 # 卷积层(None,3,3)->(None,2,64)
 cnn = Conv1D(filters=64, kernel_size=2, activation='relu')(visible)
@@ -54,17 +87,19 @@ cnn = Flatten()(cnn)
 # 密集层(None,64)->(None,50)
 cnn = Dense(50, activation='relu')(cnn)
 
+# 定义多路输出的网络结构
 # 密集层(None,50)->(None,1)
 output1 = Dense(1)(cnn)
 # 密集层(None,50)->(None,1)
 output2 = Dense(1)(cnn)
 # 密集层(None,50)->(None,1)
 output3 = Dense(1)(cnn)
-# tie together
+
+# 将输入结构，和三路输出结构定义到模型中
 model = Model(inputs=visible, outputs=[output1, output2, output3])
 model.compile(optimizer='adam', loss='mse')
-# fit model
 model.fit(X, [y1,y2,y3], epochs=2000, verbose=0)
+
 # demonstrate prediction
 x_input = array([[70,75,145], [80,85,165], [90,95,185]])
 x_input = x_input.reshape((1, n_steps, n_features))
