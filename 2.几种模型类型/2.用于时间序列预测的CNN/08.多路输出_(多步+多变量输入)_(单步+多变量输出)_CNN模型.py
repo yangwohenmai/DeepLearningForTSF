@@ -43,17 +43,22 @@ n_features = X.shape[2]
 y1 = y[:, 0].reshape((y.shape[0], 1))
 y2 = y[:, 1].reshape((y.shape[0], 1))
 y3 = y[:, 2].reshape((y.shape[0], 1))
-# define model
+# 定义输入的数据形状，(None,3,3)，第一个None元素代表有N组数据
 visible = Input(shape=(n_steps, n_features))
+# 卷积层(None,3,3)->(None,2,64)
 cnn = Conv1D(filters=64, kernel_size=2, activation='relu')(visible)
+# 池化层(None,2,64)->(None,1,64)
 cnn = MaxPooling1D(pool_size=2)(cnn)
+# 平滑层(None,1,64)->(None,64)
 cnn = Flatten()(cnn)
+# 密集层(None,64)->(None,50)
 cnn = Dense(50, activation='relu')(cnn)
-# define output 1
+
+# 密集层(None,50)->(None,1)
 output1 = Dense(1)(cnn)
-# define output 2
+# 密集层(None,50)->(None,1)
 output2 = Dense(1)(cnn)
-# define output 3
+# 密集层(None,50)->(None,1)
 output3 = Dense(1)(cnn)
 # tie together
 model = Model(inputs=visible, outputs=[output1, output2, output3])

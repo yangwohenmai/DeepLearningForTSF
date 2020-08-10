@@ -108,11 +108,10 @@ n_features = 1
  [[75]
   [85]
   [95]]]
-
 """
 X1 = X[:, :, 0].reshape(X.shape[0], X.shape[1], n_features)
 X2 = X[:, :, 1].reshape(X.shape[0], X.shape[1], n_features)
-# 分别定义两路输入的输入数据形状，（3,1），共7组数据
+# 分别定义两路输入的输入数据形状，（None,3,1），第一个None元素代表有N组数据
 visible1 = Input(shape=(n_steps, n_features))
 # 卷积层(,3,1)->(,2,64)
 cnn1 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible1)
@@ -120,28 +119,43 @@ cnn1 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible1)
 cnn1 = MaxPooling1D(pool_size=2)(cnn1)
 # 平滑层(,1,64)->(,64)
 cnn1 = Flatten()(cnn1)
-# 分别定义两路输入的输入数据形状，（3,1），共7组数据
+# 分别定义两路输入的输入数据形状，（None,3,1），第一个None元素代表有N组数据
 visible2 = Input(shape=(n_steps, n_features))
-# 卷积层(,3,1)->(,2,64)
+# 卷积层(None,3,1)->(None,2,64)
 cnn2 = Conv1D(filters=64, kernel_size=2, activation='relu')(visible2)
-# 池化层(,2,64)->(,1,64)
+# 池化层(None,2,64)->(None,1,64)
 cnn2 = MaxPooling1D(pool_size=2)(cnn2)
-# 平滑层(,1,64)->(,64)
+# 平滑层(None,1,64)->(None,64)
 cnn2 = Flatten()(cnn2)
-# 两路数据通过卷积层，池化层，平滑层后，合并起来，与全连接层相连[(,64),(,64)]->(,128)
+# 两路数据通过卷积层，池化层，平滑层后，合并起来，与全连接层相连[(None,64),(None,64)]->(None,128)
 merge = concatenate([cnn1, cnn2])
-# 全连接层(,128)->(,50)
+# 全连接层(None,128)->(None,50)
 dense = Dense(50, activation='relu')(merge)
-# 全连接层(,50)->(,1)
+# 全连接层(None,50)->(None,1)
 output = Dense(1)(dense)
 model = Model(inputs=[visible1, visible2], outputs=output)
 model.compile(optimizer='adam', loss='mse')
 # 训练网络时，输入数据拼接成[X1, X2]即[(7,3,1),(7,3,1)]
 model.fit([X1, X2], y, epochs=1000, verbose=0)
 
-# demonstrate prediction
+# 构造输入数据
+"""
+[[ 80  85]
+ [ 90  95]
+ [100 105]]
+"""
 x_input = array([[80, 85], [90, 95], [100, 105]])
+"""
+[[[ 80]
+  [ 90]
+  [100]]]
+"""
 x1 = x_input[:, 0].reshape((1, n_steps, n_features))
+"""
+[[[ 85]
+  [ 95]
+  [105]]]
+"""
 x2 = x_input[:, 1].reshape((1, n_steps, n_features))
 yhat = model.predict([x1, x2], verbose=0)
 print(yhat)
