@@ -33,13 +33,11 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # horizontally stack columns
 dataset = hstack((in_seq1, in_seq2, out_seq))
-# choose a number of time steps
+# 定义时间步长
 n_steps = 3
-# convert into input/output
+# 数据转换，获取输入输出对：X(6,3,3)y(6,3),具体调用的split_sequences函数见之前章节“多步+多变量入_单步+多变量出”文档
 X, y = split_sequences(dataset, n_steps)
-print(X)
-print(y)
-# the dataset knows the number of features, e.g. 2
+# 定义特征值数量
 n_features = X.shape[2]
 """
 将输出y
@@ -100,7 +98,7 @@ model = Model(inputs=visible, outputs=[output1, output2, output3])
 model.compile(optimizer='adam', loss='mse')
 model.fit(X, [y1,y2,y3], epochs=2000, verbose=0)
 
-# demonstrate prediction
+# 构造输入数据x_input形状(1,3,3)，来测试网络
 x_input = array([[70,75,145], [80,85,165], [90,95,185]])
 x_input = x_input.reshape((1, n_steps, n_features))
 yhat = model.predict(x_input, verbose=0)
