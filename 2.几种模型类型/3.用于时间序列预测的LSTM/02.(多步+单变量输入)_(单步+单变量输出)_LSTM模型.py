@@ -33,7 +33,7 @@ X = X.reshape((X.shape[0], X.shape[1], n_features))
 model = Sequential()
 # 定义输入的格式input_shape为(None,3,1),因此在fit()时，传入X(6,3,1),y(6,)，模型就会明白这是6组输入输出对
 model.add(LSTM(50, activation='relu', input_shape=(n_steps, n_features)))
-# 密集层
+# 密集层,输出(None,1)
 model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse')
 # fit model
