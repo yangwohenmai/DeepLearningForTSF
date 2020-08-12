@@ -28,7 +28,7 @@ raw_seq = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 n_steps = 4
 # X(5,4) y(5,)
 X, y = split_sequence(raw_seq, n_steps)
-# reshape from [samples, timesteps] into [samples, subsequences, 时间步, 特征值]
+# reshape from [samples, timesteps] into [样本数量, 子样本, 时间步, 特征值]
 n_features = 1
 n_seq = 2
 n_steps = 2
