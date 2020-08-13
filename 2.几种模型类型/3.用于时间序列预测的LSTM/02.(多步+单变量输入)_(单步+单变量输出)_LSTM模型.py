@@ -38,7 +38,8 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse')
 # fit model
 model.fit(X, y, epochs=200, verbose=0)
-# demonstrate prediction
+
+# 构造一条符合要求的输入数据进行测试
 x_input = array([70, 80, 90])
 x_input = x_input.reshape((1, n_steps, n_features))
 yhat = model.predict(x_input, verbose=0)
