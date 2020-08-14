@@ -43,7 +43,8 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse')
 # fit model
 model.fit(X, y, epochs=1000, verbose=0)
-# demonstrate prediction
+
+# 构造一条符合要求的输入数据进行测试,将待预测序列x_input(3,3)转换成x_input(1,3,1),1表示每批传入1组数据，3表示时间步，1表示特征
 x_input = array([70, 80, 90])
 x_input = x_input.reshape((1, n_steps, n_features))
 yhat = model.predict(x_input, verbose=0)

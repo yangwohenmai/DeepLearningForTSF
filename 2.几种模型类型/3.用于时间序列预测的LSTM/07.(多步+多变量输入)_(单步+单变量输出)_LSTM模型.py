@@ -5,16 +5,16 @@ from keras.models import Sequential
 from keras.layers import LSTM
 from keras.layers import Dense
 
-# split a multivariate sequence into samples
+# 构造多元监督学习型数据
 def split_sequences(sequences, n_steps):
 	X, y = list(), list()
 	for i in range(len(sequences)):
-		# find the end of this pattern
+		# 获取待预测数据的位置
 		end_ix = i + n_steps
-		# check if we are beyond the dataset
+		# 如果待预测数据超过序列长度，构造完成
 		if end_ix > len(sequences):
 			break
-		# gather input and output parts of the pattern
+		# 取前三行数据的前两列作为输入X，第三行数据的最后一列作为输出y
 		seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
 		X.append(seq_x)
 		y.append(seq_y)
@@ -30,11 +30,11 @@ in_seq2 = in_seq2.reshape((len(in_seq2), 1))
 out_seq = out_seq.reshape((len(out_seq), 1))
 # horizontally stack columns
 dataset = hstack((in_seq1, in_seq2, out_seq))
-# choose a number of time steps
+# 定义时间步长
 n_steps = 3
-# convert into input/output
+# 数据集dataset(9,3)通过split_sequences变成输入输出对：X(7,3,2),y(7,)
 X, y = split_sequences(dataset, n_steps)
-# the dataset knows the number of features, e.g. 2
+# 定义特征值
 n_features = X.shape[2]
 # define model
 model = Sequential()
@@ -43,7 +43,8 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse')
 # fit model
 model.fit(X, y, epochs=200, verbose=0)
-# demonstrate prediction
+
+# 构造一条符合要求的输入数据进行测试
 x_input = array([[80, 85], [90, 95], [100, 105]])
 x_input = x_input.reshape((1, n_steps, n_features))
 yhat = model.predict(x_input, verbose=0)

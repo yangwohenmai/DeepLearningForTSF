@@ -1,10 +1,8 @@
 from numpy import array
 from numpy import hstack
 from keras.models import Sequential
+from keras.layers import LSTM
 from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
 
 # 构造多元监督学习型数据
 def split_sequences(sequences, n_steps):
@@ -39,14 +37,12 @@ X, y = split_sequences(dataset, n_steps)
 n_features = X.shape[2]
 # define model
 model = Sequential()
-model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(n_steps, n_features)))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Flatten())
-model.add(Dense(50, activation='relu'))
+model.add(LSTM(100, activation='relu', return_sequences=True, input_shape=(n_steps, n_features)))
+model.add(LSTM(100, activation='relu'))
 model.add(Dense(n_features))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, y, epochs=3000, verbose=0)
+model.fit(X, y, epochs=400, verbose=0)
 
 # 构造一条符合要求的输入数据进行测试,将待预测序列x_input(3,3)转换成x_input(1,3,3),1表示每批传入1组数据，3表示时间步，3表示特征
 x_input = array([[70,75,145], [80,85,165], [90,95,185]])

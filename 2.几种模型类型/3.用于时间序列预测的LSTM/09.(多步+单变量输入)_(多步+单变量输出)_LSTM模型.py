@@ -1,10 +1,8 @@
-# univariate multi-step vector-output 1d cnn example
+# univariate multi-step vector-output stacked lstm example
 from numpy import array
 from keras.models import Sequential
+from keras.layers import LSTM
 from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
 
 # 构建(多步+单变量输入)_(多步+单变量输出)
 def split_sequence(sequence, n_steps_in, n_steps_out):
@@ -34,19 +32,15 @@ X = X.reshape((X.shape[0], X.shape[1], n_features))
 # define model
 model = Sequential()
 # 定义输入的格式input_shape为(3,1),因此在fit()时，传入X(5,3,1),y(5,2)，模型就会明白这是5组输入输出对
-model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(n_steps_in, n_features)))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Flatten())
-model.add(Dense(100, activation='relu'))
-# n_steps_out=2，网络输出节点数为2
+model.add(LSTM(10, activation='relu', return_sequences=True, input_shape=(n_steps_in, n_features)))
+model.add(LSTM(10, activation='relu'))
 model.add(Dense(n_steps_out))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, y, epochs=2000, verbose=0)
+model.fit(X, y, epochs=500, verbose=0)
 
 # 构造一条符合要求的输入数据进行测试,将待预测序列x_input(3,)转换成x_input(1,3,1),1表示每批传入1组数据，3表示时间步，1表示特征
 x_input = array([70, 80, 90])
 x_input = x_input.reshape((1, n_steps_in, n_features))
 yhat = model.predict(x_input, verbose=0)
 print(yhat)
-
