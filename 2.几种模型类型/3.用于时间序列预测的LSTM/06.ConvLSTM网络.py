@@ -39,7 +39,7 @@ time_steps = 2
 X = X.reshape((X.shape[0], n_seq, 1, time_steps, n_features))
 
 model = Sequential()
-# 定义输入数据形状input_shape=(2,1,2,1)
+# 定义单层ConvLSTM，kernel_size=(行，列)，处理一维序列时，内核中的行数始终固定为1,定义输入数据形状input_shape=(2,1,2,1)
 model.add(ConvLSTM2D(filters=64, kernel_size=(1,2), activation='relu', input_shape=(n_seq, 1, time_steps, n_features)))
 model.add(Flatten())
 model.add(Dense(1))
