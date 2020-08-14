@@ -1,8 +1,10 @@
-# univariate multi-step vector-output stacked lstm example
+# univariate multi-step encoder-decoder lstm example
 from numpy import array
 from keras.models import Sequential
 from keras.layers import LSTM
 from keras.layers import Dense
+from keras.layers import RepeatVector
+from keras.layers import TimeDistributed
 
 # split a univariate sequence into samples
 def split_sequence(sequence, n_steps_in, n_steps_out):
@@ -29,14 +31,17 @@ X, y = split_sequence(raw_seq, n_steps_in, n_steps_out)
 # reshape from [samples, timesteps] into [samples, timesteps, features]
 n_features = 1
 X = X.reshape((X.shape[0], X.shape[1], n_features))
+y = y.reshape((y.shape[0], y.shape[1], n_features))
 # define model
 model = Sequential()
-model.add(LSTM(30, activation='relu', return_sequences=True, input_shape=(n_steps_in, n_features)))
-model.add(LSTM(30, activation='relu'))
-model.add(Dense(n_steps_out))
+model.add(LSTM(40, activation='relu', input_shape=(n_steps_in, n_features)))
+# 定义编码器的输出长度
+model.add(RepeatVector(n_steps_out))
+model.add(LSTM(40, activation='relu', return_sequences=True))
+model.add(TimeDistributed(Dense(1)))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, y, epochs=500, verbose=0)
+model.fit(X, y, epochs=300, verbose=0)
 # demonstrate prediction
 x_input = array([70, 80, 90])
 x_input = x_input.reshape((1, n_steps_in, n_features))

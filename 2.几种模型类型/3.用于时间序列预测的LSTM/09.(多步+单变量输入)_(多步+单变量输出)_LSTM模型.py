@@ -32,15 +32,15 @@ X = X.reshape((X.shape[0], X.shape[1], n_features))
 # define model
 model = Sequential()
 # 定义输入的格式input_shape为(3,1),因此在fit()时，传入X(5,3,1),y(5,2)，模型就会明白这是5组输入输出对
-model.add(LSTM(10, activation='relu', return_sequences=True, input_shape=(n_steps_in, n_features)))
-model.add(LSTM(10, activation='relu'))
+model.add(LSTM(30, activation='relu', return_sequences=True, input_shape=(n_steps_in, n_features)))
+model.add(LSTM(30, activation='relu'))
 model.add(Dense(n_steps_out))
 model.compile(optimizer='adam', loss='mse')
 # fit model
-model.fit(X, y, epochs=500, verbose=0)
+model.fit(X, y, epochs=300, verbose=0)
 
 # 构造一条符合要求的输入数据进行测试,将待预测序列x_input(3,)转换成x_input(1,3,1),1表示每批传入1组数据，3表示时间步，1表示特征
-x_input = array([70, 80, 90])
+x_input = array([60, 70, 80])
 x_input = x_input.reshape((1, n_steps_in, n_features))
 yhat = model.predict(x_input, verbose=0)
 print(yhat)
