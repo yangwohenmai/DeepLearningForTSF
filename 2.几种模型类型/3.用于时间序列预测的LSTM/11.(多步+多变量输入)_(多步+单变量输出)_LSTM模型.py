@@ -37,9 +37,9 @@ dataset = hstack((in_seq1, in_seq2, out_seq))
 # n_steps_in:输入数据长度
 # n_steps_out:输出数据长度
 # shift:从距离当前输入序列结尾位置，上下偏移多少位开始取值，作为输出
-n_steps_in, n_steps_out, shift = 3, 2, 0
+n_steps_in, n_steps_out, shift = 3, 2, -1
 # 调用上述split_sequences函数，数据集data(9,3)变成输入输出对：X(5,3,2),y(5,2)
-X, y = split_sequences(dataset, n_steps_in, n_steps_out)
+X, y = split_sequences(dataset, n_steps_in, n_steps_out, shift)
 # 获取X(5,3,2)的特征值n_features = 2
 n_features = X.shape[2]
 # define model
