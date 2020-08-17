@@ -46,6 +46,7 @@ model = Sequential()
 model.add(LSTM(200, activation='relu', input_shape=(n_steps_in, n_features)))
 model.add(RepeatVector(n_steps_out))
 model.add(LSTM(200, activation='relu', return_sequences=True))
+# 由于是多步输出，使用TimeDistributed层来输出带时间步长的数据结构
 model.add(TimeDistributed(Dense(n_features)))
 model.compile(optimizer='adam', loss='mse')
 # fit model

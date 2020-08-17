@@ -35,7 +35,7 @@ y = y.reshape((y.shape[0], y.shape[1], n_features))
 # define model
 model = Sequential()
 model.add(LSTM(40, activation='relu', input_shape=(n_steps_in, n_features)))
-# 定义编码器的输出长度
+# 定义编码器的输出长度，
 model.add(RepeatVector(n_steps_out))
 model.add(LSTM(40, activation='relu', return_sequences=True))
 model.add(TimeDistributed(Dense(1)))
