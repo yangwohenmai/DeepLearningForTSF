@@ -1,48 +1,40 @@
-import numpy as np
-a = np.arange(1, 7).reshape((2, 3))
-b = np.arange(7, 13).reshape((2, 3))
-c = np.arange(13, 19).reshape((2, 3))
+# summarize class balance
+from numpy import array
+from numpy import vstack
+from pandas import read_csv
+from pandas import DataFrame
 
-print('a = \n', a)
-print('b = \n', b)
-print('c = \n', c)
+# load a single file as a numpy array
+def load_file(filepath):
+	dataframe = read_csv(filepath, header=None, delim_whitespace=True)
+	return dataframe.values
 
+# summarize the balance of classes in an output variable column
+def class_breakdown(data):
+	# convert the numpy array into a dataframe
+	df = DataFrame(data)
+	# group data by the class value and calculate the number of rows
+	counts = df.groupby(0).size()
+	# retrieve raw rows
+	counts = counts.values
+	# summarize
+	for i in range(len(counts)):
+		percent = counts[i] / len(df) * 100
+		print('Class=%d, total=%d, percentage=%.3f' % (i+1, counts[i], percent))
 
-s = np.vstack((a, b, c))
-print('vstack \n ', s.shape, '\n', s)
+# load train file
+trainy = load_file('E:/MyGit/BigDataFile/HARDataset/train/y_train.txt')
+# summarize class breakdown
+print('Train Dataset')
+class_breakdown(trainy)
 
+# load test file
+testy = load_file('E:/MyGit/BigDataFile/HARDataset/test/y_test.txt')
+# summarize class breakdown
+print('Test Dataset')
+class_breakdown(testy)
 
-s = np.hstack((a, b, c))
-print('hstack \n ', s.shape, '\n', s)
-
-
-
-s = np.stack((a, b, c), axis=0)
-print('axis = 0 \n ', s.shape, '\n', s)
-
-
-s = np.stack((a, b, c), axis=1)
-print('axis = 1 \n ', s.shape, '\n', s)
-
-
-s = np.stack((a, b, c), axis=2)
-print('axis = 2 \n ', s.shape, '\n', s)
-
-
-#a = np.array([[1,2,3],[4,5,6]])
-#b = np.array([[ 7,8,9],[10,11,12]])
-#c = np.array([[13,14,15],[16,17,18]])
-#print(np.dstack((a,b,c)))
-
-
-a = np.arange(1, 7).reshape((2, 3))
-b = np.arange(7, 13).reshape((2, 3))
-c = np.arange(13, 19).reshape((2, 3))
-d = np.arange(19, 25).reshape((2, 3))
-
-
-s = np.stack((a, b, c,d), axis=2)
-print('axis = 2 \n ', s.shape, '\n', s)
-
-s = np.dstack((a, b, c,d))
-print('axis = 3 \n ', s.shape, '\n', s)
+# summarize combined class breakdown
+print('Both')
+combined = vstack((trainy, testy))
+class_breakdown(combined)
