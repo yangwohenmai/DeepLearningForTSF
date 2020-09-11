@@ -14,7 +14,6 @@ def load_dataset(prefix=''):
 	paths = read_csv(grps_dir + 'MovementAAL_Paths.csv', header=0)
 	# load traces
 	sequences = list()
-	target_mapping = None
 	for name in listdir(data_dir):
 		filename = data_dir + name
 		if filename.endswith('_target.csv'):
@@ -32,12 +31,15 @@ print('Class=-1: %d %.3f%%' % (class1, class1/len(targets)*100))
 print('Class=+1: %d %.3f%%' % (class2, class2/len(targets)*100))
 # histogram for each anchor point
 all_rows = vstack(sequences)
+
+#开始画直方图
 pyplot.figure()
 variables = [0, 1, 2, 3]
 for v in variables:
 	pyplot.subplot(len(variables), 1, v+1)
 	pyplot.hist(all_rows[:, v], bins=20)
 pyplot.show()
+
 # histogram for trace lengths
 trace_lengths = [len(x) for x in sequences]
 pyplot.hist(trace_lengths, bins=50)
