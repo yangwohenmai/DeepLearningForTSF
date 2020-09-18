@@ -7,11 +7,11 @@ from pandas import read_csv
 # 加载IndoorMovement/dataset和IndoorMovement/groups下的所有文件
 def load_dataset(prefix=''):
 	grps_dir, data_dir = prefix+'groups/', prefix+'dataset/'
-	# 读取单个文件
+	# 读取单个文件，MovementAAL_target作数输出数据
 	targets = read_csv(data_dir + 'MovementAAL_target.csv', header=0)
 	groups = read_csv(grps_dir + 'MovementAAL_DatasetGroup.csv', header=0)
 	paths = read_csv(grps_dir + 'MovementAAL_Paths.csv', header=0)
-	# 加载IndoorMovement/dataset文件夹下除了以_target.csv结尾以外的文件
+	# 加载IndoorMovement/dataset文件夹下除了以_target.csv结尾以外的文件，作为输入数据
 	sequences = list()
 	for name in listdir(data_dir):
 		filename = data_dir + name
@@ -23,13 +23,13 @@ def load_dataset(prefix=''):
 		sequences.append(values)
 	return sequences, targets.values[:,1], groups.values[:,1], paths.values[:,1]
 
-# create a fixed 1d vector for each trace with output variable
+# 将加载的输入文件RSS_1和输出文件_target构建成一维的输入输出向量
 def create_dataset(sequences, targets):
-	# create the transformed dataset
+	# 用于存储转换后的数据
 	transformed = list()
 	# 每行数据有4列
 	n_vars = 4
-	# 所有文件中最少的一个文件只有19行数据，所以每个文件只取最后19行数据，统一维度
+	# 所有文件中最少的一个文件只有19行数据，所以每个文件只取最后19行数据，统一“输入数据”维度
 	n_steps = 19
 	# process each trace in turn
 	for i in range(len(sequences)):
@@ -44,7 +44,7 @@ def create_dataset(sequences, targets):
 		vector.append(targets[i])
 		# 将构建好的“输入->输出”对，加载到transformed中
 		transformed.append(vector)
-	# 将列表构建成数组
+	# 将存储数组的列表 转换成 存储数组的数组
 	transformed = array(transformed)
 	transformed = transformed.astype('float32')
 	return transformed
@@ -59,12 +59,9 @@ seq3 = [sequences[i] for i in range(len(groups)) if groups[i]==3]
 targets1 = [targets[i] for i in range(len(groups)) if groups[i]==1]
 targets2 = [targets[i] for i in range(len(groups)) if groups[i]==2]
 targets3 = [targets[i] for i in range(len(groups)) if groups[i]==3]
-# create ES1 dataset
-es1 = create_dataset(seq1+seq2, targets1+targets2)
-print('ES1: %s' % str(es1.shape))
-savetxt('es1.csv', es1, delimiter=',')
-# create ES2 dataset
+# 将seq1+seq2作为输入数据，targets1+targets2作为输出数据，构建一维训练数据
 es2_train = create_dataset(seq1+seq2, targets1+targets2)
+# 将seq3作为输入数据，targets3作为输出数据，构建一维测试数据
 es2_test = create_dataset(seq3, targets3)
 print('ES2 Train: %s' % str(es2_train.shape))
 print('ES2 Test: %s' % str(es2_test.shape))
