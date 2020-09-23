@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 # load the dataset
-data = read_csv('../datasets/occupancy_data/combined.csv', header=0, index_col=0, parse_dates=True, squeeze=True)
+data = read_csv('combined.csv', header=0, index_col=0, parse_dates=True, squeeze=True)
 values = data.values
 # split data into inputs and outputs
 X, y = values[:, :-1], values[:, -1]
