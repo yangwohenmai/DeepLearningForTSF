@@ -1,4 +1,4 @@
-本节场景为：通过"Temperature","Humidity","Light","CO2","HumidityRatio"等换机数据预测房间是否在使用
+本节场景为：根据环境数据，预测当天是不是大气污染日
 本节内容包含：  
 1.本程序使用了四种模型进行预测，并对四种模型预测效果进行评估测试，分别是：  
 袋装决策树（BaggingClassifier）  
