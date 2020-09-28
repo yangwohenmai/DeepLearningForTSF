@@ -21,9 +21,9 @@ from sklearn.linear_model import SGDRegressor
 
 # 将数据按week分割成训练集和测试集
 def split_dataset(data):
-	# split into standard weeks
+	# 分割成训练集和测试集
 	train, test = data[1:-328], data[-328:-6]
-	# restructure into windows of weekly data
+	# 分割成以周为单位
 	train = array(split(train, len(train)/7))
 	test = array(split(test, len(test)/7))
 	return train, test
@@ -52,9 +52,8 @@ def summarize_scores(name, score, scores):
 	s_scores = ', '.join(['%.1f' % s for s in scores])
 	print('%s: [%.3f] %s' % (name, score, s_scores))
 
-# prepare a list of ml models
+# 创建模型列表
 def get_models(models=dict()):
-	# linear models
 	models['lr'] = LinearRegression()
 	models['lasso'] = Lasso()
 	models['ridge'] = Ridge()
@@ -81,7 +80,7 @@ def make_pipeline(model):
 	pipeline = Pipeline(steps=steps)
 	return pipeline
 
-# make a recursive multi-step forecast
+# 进行递归多步预测
 def forecast(model, input_x, n_input):
 	yhat_sequence = list()
 	input_data = [x for x in input_x]
@@ -96,15 +95,18 @@ def forecast(model, input_x, n_input):
 		input_data.append(yhat)
 	return yhat_sequence
 
-# convert windows of weekly multivariate data into a series of total power
+# 将多维week数据转成一维序列
 def to_series(data):
-	# extract just the total power from each week
+	# 将数据按照week提取出来
+	# data = [array([[]])]->(1,159,7)
+	# series = [array([])]->(159,7)
 	series = [week[:, 0] for week in data]
-	# flatten into a single series
+	# 将数据展平成一维
+	# series = array([])->(1113,)
 	series = array(series).flatten()
 	return series
 
-# convert history into inputs and outputs
+# 构造“多对一(7->1)”的监督学习型数据的 输入 输出
 def to_supervised(history, n_input):
 	# convert history to a univariate series
 	data = to_series(history)
@@ -112,23 +114,24 @@ def to_supervised(history, n_input):
 	ix_start = 0
 	# step over the entire history one time step at a time
 	for i in range(len(data)):
-		# define the end of the input sequence
+		#定义每次截取数据的起始和结尾位置
 		ix_end = ix_start + n_input
 		# ensure we have enough data for this instance
 		if ix_end < len(data):
+			#截取一周数据
 			X.append(data[ix_start:ix_end])
 			y.append(data[ix_end])
-		# move along one time step
+		# 移动到下一个时间步起始位置
 		ix_start += 1
 	return array(X), array(y)
 
-# fit a model and make a forecast
+# 对模型先拟合，再预测
 def sklearn_predict(model, history, n_input):
 	# prepare data
 	train_x, train_y = to_supervised(history, n_input)
 	# make pipeline
 	pipeline = make_pipeline(model)
-	# fit the model
+	# 拟合
 	pipeline.fit(train_x, train_y)
 	# predict the week, recursively
 	yhat_sequence = forecast(pipeline, train_x[-1, :], n_input)
@@ -136,31 +139,31 @@ def sklearn_predict(model, history, n_input):
 
 # evaluate a single model
 def evaluate_model(model, train, test, n_input):
-	# history is a list of weekly data
-	history = [x for x in train]
-	# walk-forward validation over each week
-	predictions = list()
-	for i in range(len(test)):
-		# predict the week
-		yhat_sequence = sklearn_predict(model, history, n_input)
-		# store the predictions
-		predictions.append(yhat_sequence)
-		# get real observation and add to history for predicting the next week
-		history.append(test[i, :])
-	predictions = array(predictions)
-	# evaluate predictions days for each week
-	score, scores = evaluate_forecasts(test[:, :, 0], predictions)
-	return score, scores
+    # 获取训练集数据history = [array([[]])]->(1,159,7)
+    history = [x for x in train]
+    predictions = list()
+    # 预测测试集中对应的每条数据
+    for i in range(len(test)):
+        # 对模型先拟合，再预测
+        yhat_sequence = sklearn_predict(model, history, n_input)
+        # 保存预测结果
+        predictions.append(yhat_sequence)
+        # get real observation and add to history for predicting the next week
+        # history.append(test[i, :])
+    predictions = array(predictions)
+    # 评估预测值与真实值误差
+    score, scores = evaluate_forecasts(test[:, :, 0], predictions)
+    return score, scores
 
 # load the new file
 dataset = read_csv('household_power_consumption_days.csv', header=0, infer_datetime_format=True, parse_dates=['datetime'], index_col=['datetime'])
-# split into train and test
+# 将数据按week分割成训练集和测试集
 train, test = split_dataset(dataset.values)
-# prepare the models to evaluate
+# 创建模型列表
 models = get_models()
 n_input = 7
-# evaluate each model
 days = ['sun', 'mon', 'tue', 'wed', 'thr', 'fri', 'sat']
+# 对每个模型进行评估
 for name, model in models.items():
 	# evaluate and get scores
 	score, scores = evaluate_model(model, train, test, n_input)
@@ -170,4 +173,4 @@ for name, model in models.items():
 	pyplot.plot(days, scores, marker='o', label=name)
 # show plot
 pyplot.legend()
-pyplot.show()
+#pyplot.show()
