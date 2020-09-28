@@ -28,10 +28,10 @@ def split_dataset(data):
 	test = array(split(test, len(test)/7))
 	return train, test
 
-# evaluate one or more weekly forecasts against expected values
+# 评估预测结果
 def evaluate_forecasts(actual, predicted):
 	scores = list()
-	# calculate an RMSE score for each day
+	# 评估预测出来7列数据，每一列数据的均方差
 	for i in range(actual.shape[1]):
 		# calculate mse
 		mse = mean_squared_error(actual[:, i], predicted[:, i])
@@ -82,33 +82,34 @@ def make_pipeline(model):
 
 # 进行递归多步预测
 def forecast(model, input_x, n_input):
-	yhat_sequence = list()
-	input_data = [x for x in input_x]
-	for j in range(7):
-		# prepare the input data
-		X = array(input_data[-n_input:]).reshape(1, n_input)
-		# make a one-step forecast
-		yhat = model.predict(X)[0]
-		# add to the result
-		yhat_sequence.append(yhat)
-		# add the prediction to the input
-		input_data.append(yhat)
-	return yhat_sequence
+    yhat_sequence = list()
+    # 传入训练集最后一条数据，作为测试集的第一条输入
+    input_data = [x for x in input_x]
+    for j in range(7):
+        # 取input_data列表的最后7条数据，X -> reshape(1,7)
+        X = array(input_data[-n_input:]).reshape(1, n_input)
+        # 预测并保存结果
+        yhat = model.predict(X)[0]
+        yhat_sequence.append(yhat)
+        # 预测结果加入列表，用于下递归次预
+        input_data.append(yhat)
+    return yhat_sequence
 
 # 将多维week数据转成一维序列
 def to_series(data):
-	# 将数据按照week提取出来
-	# data = [array([[]])]->(1,159,7)
+	# data数据集中一共有159周数据，每周7天，每天8个特征值(159,7,8)
+	# 提取data中每一周的每一天的第一个特征值(159,7)
+	# data = [array([[]])]->(159,7,8)
 	# series = [array([])]->(159,7)
 	series = [week[:, 0] for week in data]
-	# 将数据展平成一维
+	# 将series展平成一维(159*7,)
 	# series = array([])->(1113,)
 	series = array(series).flatten()
 	return series
 
 # 构造“多对一(7->1)”的监督学习型数据的 输入 输出
 def to_supervised(history, n_input):
-	# convert history to a univariate series
+	# 获取history集合中的一列的集合
 	data = to_series(history)
 	X, y = list(), list()
 	ix_start = 0
@@ -116,9 +117,8 @@ def to_supervised(history, n_input):
 	for i in range(len(data)):
 		#定义每次截取数据的起始和结尾位置
 		ix_end = ix_start + n_input
-		# ensure we have enough data for this instance
+		# 顺序截取7条数据作为输入，1条数据做输出
 		if ix_end < len(data):
-			#截取一周数据
 			X.append(data[ix_start:ix_end])
 			y.append(data[ix_end])
 		# 移动到下一个时间步起始位置
@@ -127,15 +127,15 @@ def to_supervised(history, n_input):
 
 # 对模型先拟合，再预测
 def sklearn_predict(model, history, n_input):
-	# prepare data
-	train_x, train_y = to_supervised(history, n_input)
-	# make pipeline
-	pipeline = make_pipeline(model)
-	# 拟合
-	pipeline.fit(train_x, train_y)
-	# predict the week, recursively
-	yhat_sequence = forecast(pipeline, train_x[-1, :], n_input)
-	return yhat_sequence
+    # 将数据转换成7->1的监督数据，train_x(1106,7),train_y(1106)
+    train_x, train_y = to_supervised(history, n_input)
+    # 创建一个pipeline模型列表
+    pipeline = make_pipeline(model)
+    # 拟合
+    pipeline.fit(train_x, train_y)
+    # 预测,将训练集最后一条数据作为测试集的第一条输入
+    yhat_sequence = forecast(pipeline, train_x[-1, :], n_input)
+    return yhat_sequence
 
 # evaluate a single model
 def evaluate_model(model, train, test, n_input):
@@ -151,7 +151,7 @@ def evaluate_model(model, train, test, n_input):
         # get real observation and add to history for predicting the next week
         # history.append(test[i, :])
     predictions = array(predictions)
-    # 评估预测值与真实值误差
+    # 评估预测结果
     score, scores = evaluate_forecasts(test[:, :, 0], predictions)
     return score, scores
 
