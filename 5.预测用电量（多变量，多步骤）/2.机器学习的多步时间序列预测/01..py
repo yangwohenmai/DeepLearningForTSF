@@ -4,7 +4,7 @@ from numpy import isnan
 from pandas import read_csv
 from pandas import to_numeric
 
-# fill missing values with a value at the same time one day ago
+# 遍历填充缺失数据
 def fill_missing(values):
 	one_day = 60 * 24
 	for row in range(values.shape[0]):
@@ -14,11 +14,11 @@ def fill_missing(values):
 
 # load all data
 dataset = read_csv('E:\MyGit\BigDataFile\household_power_consumption\household_power_consumption.txt', sep=';', header=0, low_memory=False, infer_datetime_format=True, parse_dates={'datetime':[0,1]}, index_col=['datetime'])
-# mark all missing values
+# 将缺失数据标记位NaN
 dataset.replace('?', nan, inplace=True)
-# make dataset numeric
 dataset = dataset.astype('float32')
-# fill missing
+
+# 遍历填充缺失数据
 fill_missing(dataset.values)
 # add a column for for the remainder of sub metering
 values = dataset.values
