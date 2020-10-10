@@ -47,12 +47,12 @@ def evaluate_forecasts(actual, predicted):
 	score = sqrt(s / (actual.shape[0] * actual.shape[1]))
 	return score, scores
 
-# summarize scores
+# 统计得分
 def summarize_scores(name, score, scores):
 	s_scores = ', '.join(['%.1f' % s for s in scores])
 	print('%s: [%.3f] %s' % (name, score, s_scores))
 
-# 创建模型列表
+# 创建模型列表，后续循环调用模型
 def get_models(models=dict()):
 	models['lr'] = LinearRegression()
 	models['lasso'] = Lasso()
@@ -70,9 +70,9 @@ def get_models(models=dict()):
 # create a feature preparation pipeline for a model
 def make_pipeline(model):
 	steps = list()
-	# standardization
+	# 数据标准化
 	steps.append(('standardize', StandardScaler()))
-	# normalization
+	# 数据归一化
 	steps.append(('normalize', MinMaxScaler()))
 	# the model
 	steps.append(('model', model))
@@ -80,7 +80,7 @@ def make_pipeline(model):
 	pipeline = Pipeline(steps=steps)
 	return pipeline
 
-# 进行递归多步预测
+# 进行递归多步预测,所谓递归预测即用新预测出的值作为输入，去预测后续值
 def forecast(model, input_x, n_input):
     yhat_sequence = list()
     # 传入训练集最后一条数据，作为测试集的第一条输入
@@ -95,28 +95,27 @@ def forecast(model, input_x, n_input):
         input_data.append(yhat)
     return yhat_sequence
 
-# 将多维week数据转成一维序列
+# 将多维week数据取出第一列，并转成一维序列
 def to_series(data):
-	# data数据集中一共有159周数据，每周7天，每天8个特征值(159,7,8)
-	# 提取data中每一周的每一天的第一个特征值(159,7)
+	# data数据集中一共有159周数据，每周7天，每天8个特征值：(159,7,8)
+	# 当前函数提取data中每一周的每一天的第一个特征值,得到：(159,7)
 	# data = [array([[]])]->(159,7,8)
 	# series = [array([])]->(159,7)
 	series = [week[:, 0] for week in data]
-	# 将series展平成一维(159*7,)
-	# series = array([])->(1113,)
+	# 将series展平成一维(159*7,) 即：series = array([])->(1113,)
 	series = array(series).flatten()
 	return series
 
 # 构造“多对一(7->1)”的监督学习型数据的 输入 输出
-def to_supervised(history, n_input):
+def to_supervised(history, n_step):
 	# 获取history集合中的一列的集合
 	data = to_series(history)
 	X, y = list(), list()
 	ix_start = 0
-	# step over the entire history one time step at a time
+	# 遍历数据，构建(7->1)”的监督学习型数据
 	for i in range(len(data)):
 		#定义每次截取数据的起始和结尾位置
-		ix_end = ix_start + n_input
+		ix_end = ix_start + n_step
 		# 顺序截取7条数据作为输入，1条数据做输出
 		if ix_end < len(data):
 			X.append(data[ix_start:ix_end])
@@ -126,20 +125,20 @@ def to_supervised(history, n_input):
 	return array(X), array(y)
 
 # 对模型先拟合，再预测
-def sklearn_predict(model, history, n_input):
+def sklearn_predict(model, history, n_step):
     # 将数据转换成7->1的监督数据，train_x(1106,7),train_y(1106)
-    train_x, train_y = to_supervised(history, n_input)
+    train_x, train_y = to_supervised(history, n_step)
     # 创建一个pipeline模型列表
     pipeline = make_pipeline(model)
     # 拟合
     pipeline.fit(train_x, train_y)
     # 预测,将训练集最后一条数据作为测试集的第一条输入
-    yhat_sequence = forecast(pipeline, train_x[-1, :], n_input)
+    yhat_sequence = forecast(pipeline, train_x[-1, :], n_step)
     return yhat_sequence
 
-# evaluate a single model
+# 拟合、预测、评估模型
 def evaluate_model(model, train, test, n_input):
-    # 获取训练集数据history = [array([[]])]->(1,159,7)
+    # 获取训练集数据history = [array([[]])]->(159,7,8)
     history = [x for x in train]
     predictions = list()
     # 预测测试集中对应的每条数据
@@ -165,11 +164,11 @@ n_input = 7
 days = ['sun', 'mon', 'tue', 'wed', 'thr', 'fri', 'sat']
 # 对每个模型进行评估
 for name, model in models.items():
-	# evaluate and get scores
+	# 拟合、预测、评估模型
 	score, scores = evaluate_model(model, train, test, n_input)
-	# summarize scores
+	# 统计得分
 	summarize_scores(name, score, scores)
-	# plot scores
+	# 画出得分图
 	pyplot.plot(days, scores, marker='o', label=name)
 # show plot
 pyplot.legend()
