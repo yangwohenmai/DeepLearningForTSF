@@ -13,5 +13,3 @@
 	models['pa'] = PassiveAggressiveRegressor(max_iter=1000, tol=1e-3)  
 	models['ranscac'] = RANSACRegressor()  
 	models['sgd'] = SGDRegressor(max_iter=1000, tol=1e-3)  
-5.使用7个模型，每个模型预测一周七天中的指定天数  
-6.构造 7->1 监督型学习数据时，可以自定义输出数据是一周中的第几天  
