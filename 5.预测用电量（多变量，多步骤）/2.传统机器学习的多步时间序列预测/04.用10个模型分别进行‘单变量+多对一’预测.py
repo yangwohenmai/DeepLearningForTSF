@@ -138,7 +138,7 @@ def sklearn_predict(model, history, n_step):
 
 # 拟合、预测、评估模型
 def evaluate_model(model, train, test, n_input):
-    # 获取训练集数据history = [array([[]])]->(159,7,8)
+    # 获取array类型的训练集数据history = [array([[]])]->(159,7,8)
     history = [x for x in train]
     predictions = list()
     # 预测测试集中对应的每条数据
