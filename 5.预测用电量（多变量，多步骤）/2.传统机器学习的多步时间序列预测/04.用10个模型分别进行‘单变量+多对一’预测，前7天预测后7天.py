@@ -143,9 +143,10 @@ def evaluate_model(model, train, test, n_input):
     predictions = list()
     # 预测测试集中对应的每条数据
     for i in range(len(test)):
-        # 对模型先拟合，再预测，并保存预测结果，用于后续递归预测
+        # 对模型先拟合，再预测，并保存预测结果，完成本次预测后追加一条真实值用于下次预测
         yhat_sequence = sklearn_predict(model, history, n_input)
         predictions.append(yhat_sequence)
+        history.append(test[i, :])
     predictions = array(predictions)
     # 评估预测结果
     score, scores = evaluate_forecasts(test[:, :, 0], predictions)

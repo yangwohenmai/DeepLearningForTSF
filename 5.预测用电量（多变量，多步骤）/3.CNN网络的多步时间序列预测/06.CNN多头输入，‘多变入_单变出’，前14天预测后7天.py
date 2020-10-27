@@ -14,27 +14,24 @@ from keras.models import Model
 from keras.layers import Input
 from keras.layers.merge import concatenate
 
-# split a univariate dataset into train/test sets
+# 将数据按week分割成训练集和测试集
 def split_dataset(data):
-	# split into standard weeks
+	# 分割成训练集和测试集
 	train, test = data[1:-328], data[-328:-6]
-	# restructure into windows of weekly data
+	# 分割成以周为单位
 	train = array(split(train, len(train)/7))
 	test = array(split(test, len(test)/7))
 	return train, test
 
-# evaluate one or more weekly forecasts against expected values
+# 评估真实值和预测值的RMSE
 def evaluate_forecasts(actual, predicted):
 	scores = list()
-	# calculate an RMSE score for each day
+	# 评估预测出来7列数据，每一列数据的均方差
 	for i in range(actual.shape[1]):
-		# calculate mse
 		mse = mean_squared_error(actual[:, i], predicted[:, i])
-		# calculate rmse
 		rmse = sqrt(mse)
-		# store
 		scores.append(rmse)
-	# calculate overall RMSE
+	# 计算行列整体方差
 	s = 0
 	for row in range(actual.shape[0]):
 		for col in range(actual.shape[1]):
@@ -42,54 +39,43 @@ def evaluate_forecasts(actual, predicted):
 	score = sqrt(s / (actual.shape[0] * actual.shape[1]))
 	return score, scores
 
-# summarize scores
+# 统计得分
 def summarize_scores(name, score, scores):
 	s_scores = ', '.join(['%.1f' % s for s in scores])
 	print('%s: [%.3f] %s' % (name, score, s_scores))
 
-# convert history into inputs and outputs
-def to_supervised(train, n_input, n_out=7):
-	# flatten data
+# 构造“多对多(14->7)”的监督学习型数据
+def to_supervised(train, input_step, out_step=7):
+	# 将3维数据(159,7,8)展平成2维(1113,8)
 	data = train.reshape((train.shape[0]*train.shape[1], train.shape[2]))
 	X, y = list(), list()
 	in_start = 0
-	# step over the entire history one time step at a time
+	# 遍历数据，构建“多对多(14->7)”的监督学习型数据
 	for _ in range(len(data)):
-		# define the end of the input sequence
-		in_end = in_start + n_input
-		out_end = in_end + n_out
-		# ensure we have enough data for this instance
+		#定义每次 输入 截取数据的结尾位置
+		in_end = in_start + input_step
+		#定义每次 输出 截取数据的结尾位置
+		out_end = in_end + out_step
+		
 		if out_end <= len(data):
+			# 输入X索引：eg:(0~14)、(1~15)、(2~16)、(3~17)
 			X.append(data[in_start:in_end, :])
+			# 输出Y索引：eg:(14~21)、(15~22)、(16~23)、(17~24)
 			y.append(data[in_end:out_end, 0])
-		# move along one time step
+		# 取数的起始位置向后位移1
 		in_start += 1
+	# 输入(1093,14,8) 输出(1093,7)
 	return array(X), array(y)
 
-# plot training history
-def plot_history(history):
-	# plot loss
-	pyplot.subplot(2, 1, 1)
-	pyplot.plot(history.history['loss'], label='train')
-	pyplot.plot(history.history['val_loss'], label='test')
-	pyplot.title('loss', y=0, loc='center')
-	pyplot.legend()
-	# plot rmse
-	pyplot.subplot(2, 1, 2)
-	pyplot.plot(history.history['rmse'], label='train')
-	pyplot.plot(history.history['val_rmse'], label='test')
-	pyplot.title('rmse', y=0, loc='center')
-	pyplot.legend()
-	pyplot.show()
-
-# train the model
+# 构建和训练模型
 def build_model(train, n_input):
-	# prepare data
+	# 构造“多对多(14->7)”的监督学习型数据
+	# train_x(1093,14,8),train_y(1093,7)
 	train_x, train_y = to_supervised(train, n_input)
-	# define parameters
-	verbose, epochs, batch_size = 0, 25, 16
+	# 训练次数25，批次大小16，输入时间步为14，特征值为8，每次预测7条数据
+	verbose, epochs, batch_size = 1, 25, 16
 	n_timesteps, n_features, n_outputs = train_x.shape[1], train_x.shape[2], train_y.shape[1]
-	# create a channel for each variable
+	# 创建8个CNN输入通道
 	in_layers, out_layers = list(), list()
 	for i in range(n_features):
 		inputs = Input(shape=(n_timesteps,1))
@@ -100,9 +86,9 @@ def build_model(train, n_input):
 		# store layers
 		in_layers.append(inputs)
 		out_layers.append(flat)
-	# merge heads
+	# 汇总8个输入通道
 	merged = concatenate(out_layers)
-	# interpretation
+	# 解释特征
 	dense1 = Dense(200, activation='relu')(merged)
 	dense2 = Dense(100, activation='relu')(dense1)
 	outputs = Dense(n_outputs)(dense2)
@@ -116,16 +102,15 @@ def build_model(train, n_input):
 
 # make a forecast
 def forecast(model, history, n_input):
-	# flatten data
+	# 将3维数据(159,7,8)展平成2维(1113,8)
 	data = array(history)
 	data = data.reshape((data.shape[0]*data.shape[1], data.shape[2]))
-	# retrieve last observations for input data
+	# 每次取历史数据的最后14条，作为输入,input_x(14,8)
 	input_x = data[-n_input:, :]
-	# reshape into n input arrays
+	# 重构输入形状，将8个特征值拆分成8个3d数组：(14,8)->(1,14,1)*8
 	input_x = [input_x[:,i].reshape((1,input_x.shape[0],1)) for i in range(input_x.shape[1])]
-	# forecast the next week
+	# 预测未来一周值(1,7)，并返回需要的格式(7,)
 	yhat = model.predict(input_x, verbose=0)
-	# we only want the vector forecast
 	yhat = yhat[0]
 	return yhat
 
@@ -133,32 +118,31 @@ def forecast(model, history, n_input):
 def evaluate_model(train, test, n_input):
 	# fit model
 	model = build_model(train, n_input)
-	# history is a list of weekly data
+	# 获取array类型的训练集数据history = [array([[]])]->(159,7,8)
 	history = [x for x in train]
-	# walk-forward validation over each week
+
+	# 预测测试集中对应的每条数据
 	predictions = list()
 	for i in range(len(test)):
-		# predict the week
+		# 按周(每次预测7条)进行预测，并保存预测结果，完成本次预测后追加一条真实值用于下次预测
 		yhat_sequence = forecast(model, history, n_input)
-		# store the predictions
 		predictions.append(yhat_sequence)
-		# get real observation and add to history for predicting the next week
 		history.append(test[i, :])
-	# evaluate predictions days for each week
+	# 预测完成后，评估结果
 	predictions = array(predictions)
 	score, scores = evaluate_forecasts(test[:, :, 0], predictions)
 	return score, scores
 
-# load the new file
+
 dataset = read_csv('household_power_consumption_days.csv', header=0, infer_datetime_format=True, parse_dates=['datetime'], index_col=['datetime'])
-# split into train and test
+# 将数据按week分割成训练集(159,7,8)和测试集(46,7,8)
 train, test = split_dataset(dataset.values)
 # evaluate model and get scores
 n_input = 14
 score, scores = evaluate_model(train, test, n_input)
-# summarize scores
+# 统计得分
 summarize_scores('cnn', score, scores)
-# plot scores
+# 画出得分图
 days = ['sun', 'mon', 'tue', 'wed', 'thr', 'fri', 'sat']
 pyplot.plot(days, scores, marker='o', label='cnn')
 pyplot.show()

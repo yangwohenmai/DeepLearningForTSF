@@ -96,7 +96,7 @@ def forecast(model, history, input_step):
 	# 将3维数据(159,7,8)展平成2维(1113,8)
 	data = array(history)
 	data = data.reshape((data.shape[0]*data.shape[1], data.shape[2]))
-	# 取训练集最后14条数据，作为测试集的第首次输入,input_x(14,8)
+	# 每次取历史数据的最后14条，作为输入,input_x(14,8)
 	input_x = data[-input_step:, :]
 	# 重构输入形状(14,8)->(1,14,8)
 	input_x = input_x.reshape((1, input_x.shape[0], input_x.shape[1]))
@@ -115,7 +115,7 @@ def evaluate_model(train, test, input_step):
 	predictions = list()
 	# 预测测试集中对应的每条数据
 	for i in range(len(test)):
-		# 按周(每次预测7条)进行预测，并保存预测结果，用于后续递归预测
+		# 按周(每次预测7条)进行预测，并保存预测结果，完成本次预测后追加一条真实值用于下次预测
 		yhat_sequence = forecast(model, history, input_step)
 		predictions.append(yhat_sequence)
 		history.append(test[i, :])
