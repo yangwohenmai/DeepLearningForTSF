@@ -1,15 +1,8 @@
-本节内容包含：  
-1.对数据集中带？的缺失数据进行填充，直接将上一日对应时间点数据填充到缺失处，并保存成csv  
+本节内容包含： 
+本节属于上一节练习的延续,元数据取自上一节   
+1.对数据集中带？的缺失数据进行填充，直接将上一日对应时间点数据填充到缺失处，并保存成household_power_consumption_days.csv  
 2.使用resample('D')将分钟级别的数据合并成日级别/月级别/年级别  
 3.按照周（7日）为尺度分割数据成多组  
-4.构造 7->1 的监督学习型数据，用10个模型分别预测
-	models['lr'] = LinearRegression()  
-	models['lasso'] = Lasso()  
-	models['ridge'] = Ridge()  
-	models['en'] = ElasticNet()  
-	models['huber'] = HuberRegressor()  
-	models['lars'] = Lars()  
-	models['llars'] = LassoLars()  
-	models['pa'] = PassiveAggressiveRegressor(max_iter=1000, tol=1e-3)  
-	models['ranscac'] = RANSACRegressor()  
-	models['sgd'] = SGDRegressor(max_iter=1000, tol=1e-3)  
+4.CNN模型预测，构造 7->7 的监督学习型数据，用前7天的“单变量”数据--预测后7天的“单变量”数据  
+5.CNN模型预测，构造 14->7 的监督学习型数据，用前14天的“多变量”数据--预测后7天的“单变量”数据  
+6.CNN模型预测，输入数据中有8个特征值，分8路进行输入。将(1,14,8)的数据结构拆分成8*(1,14,1)的数据结构，分别走8个CNN层进行特征提取。构造 14->7 的监督学习型数据，前14天的“多变量”数据，分成8路输入--预测后7天的“单变量”数据  
