@@ -26,7 +26,7 @@ def split_dataset(data):
 # 评估真实值和预测值的RMSE
 def evaluate_forecasts(actual, predicted):
 	scores = list()
-	# 评估预测出来7列数据，每一列数据的RMSE
+	# 评估预测出来的每个输出，每个输出有7列（步长为7），计算每一列（步）的RMSE
 	for i in range(actual.shape[1]):
 		mse = mean_squared_error(actual[:, i], predicted[:, i])
 		rmse = sqrt(mse)
