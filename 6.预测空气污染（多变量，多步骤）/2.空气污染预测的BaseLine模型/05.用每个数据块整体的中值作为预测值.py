@@ -32,7 +32,7 @@ def forecast_variable(train_chunks, chunk_train, chunk_test, lead_times, target_
 	# 获取中值
 	value = nanmedian(history)
 	# persist the same value for all lead times
-	forecast = [value for _ in rang e(len(lead_times))]
+	forecast = [value for _ in range(len(lead_times))]
 	return forecast
 
 # forecast for each chunk, returns [chunk][variable][time]

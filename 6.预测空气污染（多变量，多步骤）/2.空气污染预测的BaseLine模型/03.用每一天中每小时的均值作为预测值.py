@@ -2,7 +2,6 @@
 from numpy import loadtxt
 from numpy import nan
 from numpy import isnan
-from numpy import count_nonzero
 from numpy import unique
 from numpy import array
 from numpy import nanmedian
