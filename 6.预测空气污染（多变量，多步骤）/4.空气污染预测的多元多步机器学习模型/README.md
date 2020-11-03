@@ -1,3 +1,23 @@
 本节内容包含：  
-本章节描述了如何构建简单的BaseLine（基线）预测模型
-分别用数据集的均值，中位数，最后观测值作为数据的预测值，并评估预测值与真实数据之间的误差
+本节在前几个章节的知识背景下，将数据进行预处理后，拆分成训练集和测试集。然后构建成监督学习型数据。  
+先构建了8个线性模型
+	models['lr'] = LinearRegression()
+	models['lasso'] = Lasso()
+	models['ridge'] = Ridge()
+	models['en'] = ElasticNet()
+	models['huber'] = HuberRegressor()
+	models['llars'] = LassoLars()
+	models['pa'] = PassiveAggressiveRegressor(max_iter=1000, tol=1e-3)
+	models['sgd'] = SGDRegressor(max_iter=1000, tol=1e-3)
+再构建了9个非线性模型
+	models['knn'] = KNeighborsRegressor(n_neighbors=7)
+	models['cart'] = DecisionTreeRegressor()
+	models['extra'] = ExtraTreeRegressor()
+	models['svmr'] = SVR()
+	# # ensemble models
+	n_trees = 100
+	models['ada'] = AdaBoostRegressor(n_estimators=n_trees)
+	models['bag'] = BaggingRegressor(n_estimators=n_trees)
+	models['rf'] = RandomForestRegressor(n_estimators=n_trees)
+	models['et'] = ExtraTreesRegressor(n_estimators=n_trees)
+	models['gbm'] = GradientBoostingRegressor(n_estimators=n_trees)
