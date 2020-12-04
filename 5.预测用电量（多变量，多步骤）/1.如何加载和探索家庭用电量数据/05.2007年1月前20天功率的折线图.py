@@ -2,7 +2,7 @@
 from pandas import read_csv
 from matplotlib import pyplot
 # load the new file
-dataset = read_csv('household_power_consumption.csv', header=0, infer_datetime_format=True, parse_dates=['datetime'], index_col=['datetime'])
+dataset = read_csv('E:/MyGit/BigDataFile/household_power_consumption/household_power_consumption.csv', header=0, infer_datetime_format=True, parse_dates=['datetime'], index_col=['datetime'])
 # plot active power for each year
 days = [x for x in range(1, 20)]
 pyplot.figure()
